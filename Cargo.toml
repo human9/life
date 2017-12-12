@@ -6,4 +6,5 @@ authors = ["John <salamonj9@gmail.com>"]
 [dependencies]
 gl = "*"
 glium = "*"
+glium_text = "*"
 cgmath = "*"

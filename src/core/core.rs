@@ -1,3 +1,6 @@
+extern crate glium;
+use glium::Surface;
+
 use std::thread;
 use std::time::Duration;
 use core::window::Window;
@@ -22,6 +25,12 @@ impl Core {
     pub fn mainloop(&mut self) {
 
         let mut last_time = self.stats.millis_elapsed();
+
+        let debug_program = self.window.with_display(gl::base::compile_debug_program).expect("Could not compile default program!");
+        let vertices = self.window.with_display(gl::base::make_triangle).expect("Failed making triangle");
+        let indices = glium::index::NoIndices(glium::index::PrimitiveType::TrianglesList);
+
+
 
         loop {
 
@@ -48,7 +57,13 @@ impl Core {
 
             last_time = current_time;
 
-            self.window.display(gl::base::gl_clear);
+            //self.window.display(&gl::base::gl_clear);
+            // client could define a list of closure pointers like so which can be passed down
+            // but I will implement some debug things first
+            self.window.display(&| frame | {
+                frame.clear_color(1.0, 1.0, 1.0, 1.0);
+                frame.draw(&vertices, &indices, &debug_program, &glium::uniforms::EmptyUniforms, &Default::default()).unwrap();
+            });
         }
     }
 }

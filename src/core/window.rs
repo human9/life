@@ -37,8 +37,13 @@ impl Window {
             input_set: InputSet::new(),
         }
     }
+    
+    pub fn with_display<R, E>(&mut self, f: fn(glium::Display) -> Result<R, E>) -> Result<R, E> {
 
-    pub fn display(&mut self, f: fn(&mut glium::Frame)) -> Result<(), Box<Error>> {
+        f(self.display.clone())
+    }
+
+    pub fn display(&mut self, f: &(Fn(&mut glium::Frame))) -> Result<(), Box<Error>> {
 
         let mut frame = self.display.draw();
         f(&mut frame);
