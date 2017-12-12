@@ -1,8 +1,8 @@
 extern crate glium;
-extern crate glium_text;
+extern crate glium_text_rusttype as glium_text;
 
-use glium_text::TextSystem;
-use glium_text::FontTexture;
+use self::glium_text::TextSystem;
+use self::glium_text::FontTexture;
 use glium::Surface;
 use glium::Vertex;
 use glium::index::Index;
@@ -37,10 +37,11 @@ pub fn gl_clear(frame: &mut glium::Frame) {
 //pub fn init_text(display: glium::Display) -> Result<(TextSystem, FontTexture), glium::ProgramCreationError> {
   //  Ok( (TextSystem::new(&display), glium_text::FontTexture::new(&display, File::open(&Path::new("res/font/DroidSans.ttf")).unwrap(), 32).unwrap()) )
 //}
+//
 
 
 pub fn compile_debug_program(display: glium::Display) -> Result<glium::Program, glium::ProgramCreationError> {
-
+    TextSystem::new(&display.clone());
     let vertex_shader_src = r#"
         #version 140
 

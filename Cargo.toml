@@ -6,5 +6,5 @@ authors = ["John <salamonj9@gmail.com>"]
 [dependencies]
 gl = "*"
 glium = "*"
-glium_text = "*"
+glium_text_rusttype = { git = "https://github.com/human9/gtr-fork" }
 cgmath = "*"
