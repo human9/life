@@ -1,6 +1,9 @@
 extern crate glium;
 extern crate glium_text_rusttype as glium_text;
 
+use cgmath::Matrix4;
+use gl::cgtraits::AsUniform;
+
 use self::glium_text::TextSystem;
 use self::glium_text::FontTexture;
 use glium::Surface;
@@ -12,18 +15,17 @@ use std::path::Path;
 use std::fs::File;
 
 #[derive(Copy, Clone)]
-pub struct Vertex2D {
-    position: [f32; 2],
+pub struct Vertex3D {
+    position: [f32; 3],
 }
 
-implement_vertex!(Vertex2D, position);
+implement_vertex!(Vertex3D, position);
 
+pub fn make_triangle(display: glium::Display) -> Result<glium::VertexBuffer<Vertex3D>, glium::vertex::BufferCreationError> {
 
-pub fn make_triangle(display: glium::Display) -> Result<glium::VertexBuffer<Vertex2D>, glium::vertex::BufferCreationError> {
-
-    let vertex1 = Vertex2D { position: [-0.5, -0.5] };
-    let vertex2 = Vertex2D { position: [ 0.0,  0.5] };
-    let vertex3 = Vertex2D { position: [ 0.5, -0.5] };
+    let vertex1 = Vertex3D { position: [-0.5, -0.5, 0.0] };
+    let vertex2 = Vertex3D { position: [ 0.0,  0.5, 0.0] };
+    let vertex3 = Vertex3D { position: [ 0.5, -0.5, 0.0] };
     let triangle = vec![vertex1, vertex2, vertex3];
 
     glium::VertexBuffer::new(&display, &triangle)
@@ -34,21 +36,37 @@ pub fn gl_clear(frame: &mut glium::Frame) {
     frame.clear_color(1.0, 0.0, 0.0, 1.0);
 }
 
-//pub fn init_text(display: glium::Display) -> Result<(TextSystem, FontTexture), glium::ProgramCreationError> {
-  //  Ok( (TextSystem::new(&display), glium_text::FontTexture::new(&display, File::open(&Path::new("res/font/DroidSans.ttf")).unwrap(), 32).unwrap()) )
-//}
-//
+pub struct TextDrawer {
+    system: TextSystem,
+    font: FontTexture,
+}
+
+impl TextDrawer {
+    pub fn println(&self, line: &'static str, frame: &mut glium::Frame, mvp: &Matrix4<f32>) {
+        let string = glium_text::TextDisplay::new(&self.system, &self.font, &format!("{}", line));
+        glium_text::draw(&string, &self.system, frame, mvp.as_uniform(), (1.0, 0.0, 1.0, 1.0));
+    }
+
+}
+
+pub fn init_text(display: glium::Display) -> Result<TextDrawer, ()> {
+    Ok( TextDrawer {
+        system: TextSystem::new(&display),
+        font: FontTexture::new(&display, File::open(&Path::new("res/font/Anonymous Pro.ttf")).unwrap(), 32, FontTexture::ascii_character_list()).unwrap(),
+    } )
+}
 
 
 pub fn compile_debug_program(display: glium::Display) -> Result<glium::Program, glium::ProgramCreationError> {
-    TextSystem::new(&display.clone());
+    
     let vertex_shader_src = r#"
         #version 140
 
-        in vec2 position;
+        in vec3 position;
+        uniform mat4 mvp;
 
         void main() {
-            gl_Position = vec4(position, 0.0, 1.0);
+            gl_Position = mvp * vec4(position, 1.0);
         }
     "#;
 
