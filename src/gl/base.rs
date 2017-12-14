@@ -44,7 +44,7 @@ pub struct TextDrawer {
 impl TextDrawer {
     pub fn println(&self, line: &'static str, frame: &mut glium::Frame, mvp: &Matrix4<f32>) {
         let string = glium_text::TextDisplay::new(&self.system, &self.font, &format!("{}", line));
-        glium_text::draw(&string, &self.system, frame, mvp.as_uniform(), (1.0, 0.0, 1.0, 1.0));
+        glium_text::draw(&string, &self.system, frame, mvp.as_uniform(), (0.0, 0.0, 0.0, 1.0));
     }
 
 }
@@ -52,7 +52,7 @@ impl TextDrawer {
 pub fn init_text(display: glium::Display) -> Result<TextDrawer, ()> {
     Ok( TextDrawer {
         system: TextSystem::new(&display),
-        font: FontTexture::new(&display, File::open(&Path::new("res/font/Anonymous Pro.ttf")).unwrap(), 32, FontTexture::ascii_character_list()).unwrap(),
+        font: FontTexture::new(&display, File::open(&Path::new("res/font/Anonymous Pro.ttf")).unwrap(), 24, FontTexture::ascii_character_list()).unwrap(),
     } )
 }
 
@@ -76,7 +76,7 @@ pub fn compile_debug_program(display: glium::Display) -> Result<glium::Program, 
         out vec4 color;
 
         void main() {
-            color = vec4(0.0, 0.5, 0.5, 1.0);
+            color = vec4(0.0, 1.0, 1.0, 1.0);
         }
     "#;
 

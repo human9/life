@@ -61,15 +61,15 @@ impl Window {
         let mut shutdown = false;
         let mut menu = false;
 
-        let mut pressed = Vec::new();
-
         let mut dir = self.input_set.direction;
         let mut pointer = Vector2::new(0.0, 0.0);
 
         self.events_loop.poll_events(|ev| {
 
             match ev {
-                Event::DeviceEvent { event, .. } => match event {
+                Event::DeviceEvent { event, .. } => { 
+                    println!("A device event");
+                    match event {
                     DeviceEvent::Key(input) => {
                         match input.state {
 
@@ -80,7 +80,7 @@ impl Window {
                                     Some(VirtualKeyCode::A) => dir.x -= 1.0,
                                     Some(VirtualKeyCode::S) => dir.y -= 1.0,
                                     Some(VirtualKeyCode::D) => dir.x += 1.0,
-                                    something => pressed.push(something),
+                                    _ => (),
                                 }
                             },
 
@@ -105,7 +105,7 @@ impl Window {
                     },
 
                     _ => (),
-                },
+                }},
 
                 Event::WindowEvent { event, .. } => match event {
                     WindowEvent::Closed => shutdown = true,

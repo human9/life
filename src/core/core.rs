@@ -5,6 +5,7 @@ use cgmath::One;
 use cgmath::Matrix4;
 use cgmath::Point3;
 use cgmath::Vector3;
+use cgmath::vec3;
 use gl::cgtraits::AsUniform;
 
 use std::thread;
@@ -43,10 +44,9 @@ impl Core {
             top: 600.0,
             near: -1.0,
             far: 1.0 });
-        let eye = Point3::new(0.0, -50.0, 1.0);
-        let center = Point3::new(0.0, -50.0, -1.0);
-        let up = Vector3::new(0.0, 1.0, 0.0);
-        let view: Matrix4<f32> = Matrix4::look_at(eye, center, up);
+        
+        let mut view: Matrix4<f32> = Matrix4::from_translation(vec3(4.0, 3.0, 0.0));
+        view = view * Matrix4::from_scale(24.0);
         let mvp = projection * view;
         let uniforms = uniform! { mvp: mvp.as_uniform() };
 
