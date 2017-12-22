@@ -3,3 +3,4 @@ pub mod core;
 pub mod stats;
 mod window;
 pub mod entity;
+pub mod input;

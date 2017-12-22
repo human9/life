@@ -13,6 +13,8 @@ use std::time::Duration;
 use core::window::Window;
 use core::window::InputReturn;
 use core::stats::Stats;
+use core::input::KeyBinder;
+use core::input::DefaultBindings;
 use gl;
 
 pub struct Core {
@@ -32,6 +34,10 @@ impl Core {
     pub fn mainloop(&mut self) {
 
         let mut last_time = self.stats.millis_elapsed();
+
+        let closure = |e: glium::glutin::KeyboardInput| { println!("{:?}", e.scancode); };
+        let events_loop = glium::glutin::EventsLoop::new();
+        let mut binder = KeyBinder::new();
 
         let debug_program = self.window.with_display(gl::base::compile_debug_program).expect("Could not compile debug program!");
         let vertices = self.window.with_display(gl::base::make_triangle).expect("Failed making a triangle!");
@@ -60,7 +66,7 @@ impl Core {
             }
             let delta = current_time - last_time;
 
-            match self.window.get_input() {
+            match self.window.get_input(&events_loop, &mut binder) {
                 InputReturn::Shutdown => {
                     println!("-> Shutdown");
                     return;

@@ -4,8 +4,9 @@ extern crate cgmath;
 use std::error::Error;
 use cgmath::num_traits::clamp;
 
-use glium::glutin::{DeviceEvent, WindowEvent, Event, ElementState, VirtualKeyCode};
+use glium::glutin::{DeviceEvent, WindowEvent, Event, ElementState, VirtualKeyCode, EventsLoop, KeyboardInput};
 use cgmath::Vector2;
+use core::input::{KeyBinder, DefaultBindings};
 
 pub struct Window {
     display: glium::Display,
@@ -54,9 +55,7 @@ impl Window {
     }
 
     /// Query the window for input
-    pub fn get_input(&mut self) -> InputReturn {
-        // TODO: Configurable input mapping
-        // It would be cool but not incredibly needed
+    pub fn get_input(&mut self, events: &EventsLoop, binder: &mut KeyBinder<DefaultBindings>) -> InputReturn {
         
         let mut shutdown = false;
         let mut menu = false;
@@ -68,46 +67,25 @@ impl Window {
 
             match ev {
                 Event::DeviceEvent { event, .. } => { 
-                    println!("A device event");
                     match event {
-                    DeviceEvent::Key(input) => {
-                        match input.state {
+                        DeviceEvent::Key(input) => {
+                            binder.bind_key(input, DefaultBindings::yes);
+                        },
 
-                            ElementState::Pressed => {
-                                match input.virtual_keycode {
-                                    Some(VirtualKeyCode::Escape) => menu = true,
-                                    Some(VirtualKeyCode::W) => dir.y += 1.0,
-                                    Some(VirtualKeyCode::A) => dir.x -= 1.0,
-                                    Some(VirtualKeyCode::S) => dir.y -= 1.0,
-                                    Some(VirtualKeyCode::D) => dir.x += 1.0,
-                                    _ => (),
-                                }
-                            },
+                        DeviceEvent::Motion { axis, value } => {
+                            if axis < 2 {
+                                pointer[axis as usize] += value;
+                            }
+                        },
 
-                            ElementState::Released => {
-                                match input.virtual_keycode {
-                                    Some(VirtualKeyCode::W) => dir.y -= 1.0,
-                                    Some(VirtualKeyCode::A) => dir.x += 1.0,
-                                    Some(VirtualKeyCode::S) => dir.y += 1.0,
-                                    Some(VirtualKeyCode::D) => dir.x -= 1.0,
-                                    _ => (),
-                                }
-
-                            },
-                        }
-
-                    },
-
-                    DeviceEvent::Motion { axis, value } => {
-                        if axis < 2 {
-                            pointer[axis as usize] += value;
-                        }
-                    },
-
-                    _ => (),
-                }},
+                        _ => (),
+                    }
+                },
 
                 Event::WindowEvent { event, .. } => match event {
+                    WindowEvent::KeyboardInput { input, .. } => {
+                        binder.bind_key(input, DefaultBindings::yes);
+                    }
                     WindowEvent::Closed => shutdown = true,
                     _ => (),
 

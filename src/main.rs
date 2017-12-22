@@ -1,5 +1,4 @@
-#[macro_use]
-extern crate glium;
+#[macro_use] extern crate glium;
 extern crate cgmath;
 
 mod core;
@@ -10,4 +9,3 @@ fn main() {
     let mut core = Core::initialize();
     core.mainloop();
 }
-
