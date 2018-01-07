@@ -69,7 +69,13 @@ impl Window {
                 Event::DeviceEvent { event, .. } => { 
                     match event {
                         DeviceEvent::Key(input) => {
-                            binder.bind_key(input, DefaultBindings::yes);
+                            if binder.is_bound(input) {
+                                println!("{} -> {:?}", input.scancode, binder.get_binding(input));
+                            }
+                            else {
+                                binder.bind_key(input, DefaultBindings::yes);
+                                println!("bound scancode: {}", input.scancode);
+                            }
                         },
 
                         DeviceEvent::Motion { axis, value } => {

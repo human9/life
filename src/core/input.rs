@@ -17,16 +17,21 @@ impl<E> KeyBinder<E> {
         self.bindings.insert(key.scancode, e); 
     }
 
-    pub fn return_binding(&mut self, key: KeyboardInput) -> Option<&E> {
+    pub fn get_binding(&self, key: KeyboardInput) -> Option<&E> {
         self.bindings.get(&key.scancode)
+    }
+
+    pub fn is_bound(&self, key: KeyboardInput) -> bool {
+        self.bindings.contains_key(&key.scancode)
     }
 }
 
+#[derive(Debug)]
 pub enum DefaultBindings {
     yes,
     no,
     up,
     down,
-    left,
+    rleft,
     right,
 }
