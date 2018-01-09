@@ -43,6 +43,6 @@ pub enum DefaultBindings {
     no,
     up,
     down,
-    rleft,
+    left,
     right,
 }
