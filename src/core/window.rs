@@ -69,7 +69,7 @@ impl Window {
                 Event::DeviceEvent { event, .. } => { 
                     match event {
                         DeviceEvent::Key(input) => {
-                            binder.bind_key(input, DefaultBindings::yes);
+                            binder.process_input(input);
                         },
 
                         DeviceEvent::Motion { axis, value } => {
@@ -84,7 +84,7 @@ impl Window {
 
                 Event::WindowEvent { event, .. } => match event {
                     WindowEvent::KeyboardInput { input, .. } => {
-                        binder.bind_key(input, DefaultBindings::yes);
+                        binder.process_input(input);
                     }
                     WindowEvent::Closed => shutdown = true,
                     _ => (),

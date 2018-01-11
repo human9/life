@@ -14,7 +14,7 @@ use core::window::Window;
 use core::window::InputReturn;
 use core::stats::Stats;
 use core::input::KeyBinder;
-use core::input::DefaultBindings;
+use core::input::DefaultBindings::*;
 use gl;
 
 pub struct Core {
@@ -38,6 +38,14 @@ impl Core {
         let closure = |e: glium::glutin::KeyboardInput| { println!("{:?}", e.scancode); };
         let events_loop = glium::glutin::EventsLoop::new();
         let mut binder = KeyBinder::new();
+        binder.set_macos_default();
+        binder.respond = |binding| {
+            match binding {
+                &Yes => println!("Yes"),
+                &No => println!("No"),
+                _ => (),
+            }
+        };
 
         let debug_program = self.window.with_display(gl::base::compile_debug_program).expect("Could not compile debug program!");
         let vertices = self.window.with_display(gl::base::make_triangle).expect("Failed making a triangle!");
