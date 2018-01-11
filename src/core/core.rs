@@ -28,6 +28,7 @@ impl Core {
         Core {
             window: Window::new(),
             stats: Stats::new(),
+            //config: Config::new(),
         }
     }
 
@@ -38,7 +39,18 @@ impl Core {
         let closure = |e: glium::glutin::KeyboardInput| { println!("{:?}", e.scancode); };
         let events_loop = glium::glutin::EventsLoop::new();
         let mut binder = KeyBinder::new();
-        binder.set_macos_default();
+        if cfg!(target_os = "linux") {
+            println!("Setting defaults for Linux");
+            binder.set_linux_default();
+        }
+        if cfg!(target_os = "windows") {
+            println!("Setting defaults for Windows");
+            binder.set_windows_default();
+        }
+        if cfg!(target_os = "macos") {
+            println!("Setting defaults for MacOS");
+            binder.set_macos_default();
+        }
         binder.respond = |binding| {
             match binding {
                 &Yes => println!("Yes"),

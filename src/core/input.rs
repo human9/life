@@ -22,6 +22,26 @@ impl KeyBinder<DefaultBindings> {
         self.bindings.insert(36, DefaultBindings::Menu);
         self.bindings.insert(53, DefaultBindings::Escape);
     }
+    pub fn set_windows_default(&mut self) {
+        self.bindings.insert(75, DefaultBindings::Left);
+        self.bindings.insert(77, DefaultBindings::Right);
+        self.bindings.insert(80, DefaultBindings::Down);
+        self.bindings.insert(72, DefaultBindings::Up);
+        self.bindings.insert(44, DefaultBindings::Yes);
+        self.bindings.insert(45, DefaultBindings::No);
+        self.bindings.insert(28, DefaultBindings::Menu);
+        self.bindings.insert(1, DefaultBindings::Escape);
+    }
+    pub fn set_linux_default(&mut self) {
+        self.bindings.insert(75, DefaultBindings::Left);
+        self.bindings.insert(77, DefaultBindings::Right);
+        self.bindings.insert(80, DefaultBindings::Down);
+        self.bindings.insert(72, DefaultBindings::Up);
+        self.bindings.insert(44, DefaultBindings::Yes);
+        self.bindings.insert(45, DefaultBindings::No);
+        self.bindings.insert(28, DefaultBindings::Menu);
+        self.bindings.insert(1, DefaultBindings::Escape);
+    }
 }
 
 impl<E: Debug + Serialize + DeserializeOwned> KeyBinder<E> {
