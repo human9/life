@@ -3,16 +3,24 @@ extern crate serde_json;
 use std::collections::HashMap;
 use std::fmt::Debug;
 use serde::Serialize;
+use serde::de::DeserializeOwned;
 use glium::glutin::{DeviceEvent, WindowEvent, Event, ElementState, VirtualKeyCode, KeyboardInput};
 
-pub struct KeyBinder<E: Debug + Serialize> {
+pub struct KeyBinder<E: Debug + Serialize + DeserializeOwned> {
     pub bindings: HashMap<u32, E>,
 }
 
-impl<E: Debug + Serialize> KeyBinder<E> {
+impl<E: Debug + Serialize + DeserializeOwned> KeyBinder<E> {
     pub fn new() -> KeyBinder<E> {
         KeyBinder {
             bindings: HashMap::new(),
+        }
+    }
+
+    pub fn from_json(data: &str) -> KeyBinder<E> {
+        let h = serde_json::from_str(data).unwrap();
+        KeyBinder {
+            bindings: h,
         }
     }
 
