@@ -12,6 +12,7 @@ use std::thread;
 use std::time::Duration;
 use core::window::Window;
 use core::window::EventHandler;
+use core::window::DebugHandler;
 use core::stats::Stats;
 use core::input::KeyBinder;
 use core::input::DefaultBindings::*;
@@ -40,15 +41,12 @@ impl Core {
         let events_loop = glium::glutin::EventsLoop::new();
         let mut binder = KeyBinder::new();
         if cfg!(target_os = "linux") {
-            println!("Setting defaults for Linux");
             binder.set_linux_default();
         }
         if cfg!(target_os = "windows") {
-            println!("Setting defaults for Windows");
             binder.set_windows_default();
         }
         if cfg!(target_os = "macos") {
-            println!("Setting defaults for MacOS");
             binder.set_macos_default();
         }
         binder.respond = |binding| {
@@ -76,6 +74,8 @@ impl Core {
         let mvp = projection * view;
         let uniforms = uniform! { mvp: mvp.as_uniform() };
 
+        let mut handler = DebugHandler::new();
+
         loop {
 
             let mut current_time = self.stats.millis_elapsed();
@@ -86,7 +86,7 @@ impl Core {
             }
             let delta = current_time - last_time;
 
-            //self.window.get_input(&events_loop, &handler);
+            self.window.get_input(&events_loop, &mut handler);
 
             last_time = current_time;
 
@@ -98,6 +98,10 @@ impl Core {
                 frame.draw(&vertices, &indices, &debug_program, &uniforms, &Default::default()).unwrap();
                 text_drawer.println("hello world", frame, &mvp);
             });
+
+            if handler.shutdown == true {
+                break;
+            }
         }
     }
 }

@@ -61,7 +61,7 @@ impl Window {
     }
 
     /// Query the window for input
-    pub fn get_input<E: EventHandler>(&mut self, events: &EventsLoop, handler: &E) {
+    pub fn get_input<E: EventHandler>(&mut self, events: &EventsLoop, handler: &mut E) {
         
         self.events_loop.poll_events(|ev| {
 
@@ -72,10 +72,8 @@ impl Window {
                             handler.key_pressed(input);
                         },
 
-                        DeviceEvent::Motion { axis, value } => {
-                            if axis < 2 {
-                                //pointer[axis as usize] += value;
-                            }
+                        DeviceEvent::MouseMotion { delta } => {
+                            handler.mouse_moved(delta.0, delta.1);
                         },
 
                         _ => (),
@@ -94,6 +92,9 @@ impl Window {
                     WindowEvent::Closed => {
                         handler.shutdown(); 
                     },
+                    WindowEvent::MouseInput { button, state, .. } => {
+                        handler.mouse_pressed(button, state); 
+                    },
                     _ => (),
 
                 },
@@ -106,8 +107,36 @@ impl Window {
 
 pub trait EventHandler {
     fn resized(&self, x: u32, y: u32);
-    fn shutdown(&self, );
-    fn mouse_moved(x: f64, y: f64);
-    fn mouse_pressed(button: MouseButton, state: ElementState);
+    fn shutdown(&mut self);
+    fn mouse_moved(&self, x: f64, y: f64);
+    fn mouse_pressed(&self, button: MouseButton, state: ElementState);
     fn key_pressed(&self, key: KeyboardInput);
+}
+
+pub struct DebugHandler {
+    pub shutdown: bool,
+}
+
+impl DebugHandler {
+    pub fn new() -> Self {
+        DebugHandler {
+            shutdown: false,
+        }
+    }
+}
+
+impl EventHandler for DebugHandler {
+    fn resized(&self, x: u32, y: u32) {
+    }
+    fn shutdown(&mut self){ 
+        self.shutdown = true;
+    }
+    fn mouse_moved(&self, x: f64, y: f64) {
+
+    }
+    fn mouse_pressed(&self, button: MouseButton, state: ElementState) {
+
+    }
+    fn key_pressed(&self, key: KeyboardInput) {
+    }
 }
