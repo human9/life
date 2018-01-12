@@ -4,14 +4,13 @@ extern crate cgmath;
 use std::error::Error;
 use cgmath::num_traits::clamp;
 
-use glium::glutin::{DeviceEvent, WindowEvent, Event, ElementState, VirtualKeyCode, EventsLoop, KeyboardInput};
+use glium::glutin::{DeviceEvent, WindowEvent, Event, ElementState, VirtualKeyCode, EventsLoop, KeyboardInput, MouseButton, MouseScrollDelta};
 use cgmath::Vector2;
 use core::input::{KeyBinder, DefaultBindings};
 
 pub struct Window {
     display: glium::Display,
     events_loop: glium::glutin::EventsLoop,
-    input_set: InputSet, // The last inputset
 }
 
 impl Window {
@@ -35,13 +34,20 @@ impl Window {
         Window { 
             display: display,
             events_loop: events_loop,
-            input_set: InputSet::new(),
         }
+    }
+
+    pub fn query_size(&self) -> Option<(u32, u32)> {
+        self.display.gl_window().get_inner_size()
     }
     
     pub fn with_display<R, E>(&mut self, f: fn(glium::Display) -> Result<R, E>) -> Result<R, E> {
 
         f(self.display.clone())
+    }
+
+    pub fn clone_display(&self) -> glium::Display {
+        self.display.clone()
     }
 
     pub fn display(&mut self, f: &(Fn(&mut glium::Frame))) -> Result<(), Box<Error>> {
@@ -55,26 +61,20 @@ impl Window {
     }
 
     /// Query the window for input
-    pub fn get_input(&mut self, events: &EventsLoop, binder: &mut KeyBinder<DefaultBindings>) -> InputReturn {
+    pub fn get_input<E: EventHandler>(&mut self, events: &EventsLoop, handler: &E) {
         
-        let mut shutdown = false;
-        let mut menu = false;
-
-        let mut dir = self.input_set.direction;
-        let mut pointer = Vector2::new(0.0, 0.0);
-
         self.events_loop.poll_events(|ev| {
 
             match ev {
                 Event::DeviceEvent { event, .. } => { 
                     match event {
                         DeviceEvent::Key(input) => {
-                            binder.process_input(input);
+                            handler.key_pressed(input);
                         },
 
                         DeviceEvent::Motion { axis, value } => {
                             if axis < 2 {
-                                pointer[axis as usize] += value;
+                                //pointer[axis as usize] += value;
                             }
                         },
 
@@ -83,10 +83,17 @@ impl Window {
                 },
 
                 Event::WindowEvent { event, .. } => match event {
+                    WindowEvent::Resized(x, y) => {
+                        handler.resized(x, y);
+                    },
                     WindowEvent::KeyboardInput { input, .. } => {
-                        binder.process_input(input);
+                        if cfg!(target_os = "macos") {
+                            handler.key_pressed(input);
+                        }
                     }
-                    WindowEvent::Closed => shutdown = true,
+                    WindowEvent::Closed => {
+                        handler.shutdown(); 
+                    },
                     _ => (),
 
                 },
@@ -94,45 +101,13 @@ impl Window {
                 _ => (),
             }
         });
-
-        if shutdown {
-            return InputReturn::Shutdown;
-        }
-        if menu {
-            return InputReturn::Menu;
-        }
-        
-        for axis in 0..1 {
-            dir[axis] = clamp(dir[axis], -1.0, 1.0);
-        }
-
-        self.input_set.direction = dir;
-        self.input_set.pointer = pointer;
-
-        InputReturn::Input(self.input_set)
-
     }
 }
 
-/// Various mapping-agnostic input values
-#[derive(Copy, Clone)]
-pub struct InputSet {
-    pub direction: Vector2<f32>, // the XY direction being held, from -1 to 1
-    pub pointer: Vector2<f64>, // the on-screen location of the pointer
-}
-
-impl InputSet {
-    pub fn new() -> InputSet {
-        InputSet {
-            direction: Vector2::new(0.0, 0.0),
-            pointer: Vector2::new(0.0, 0.0),
-        }
-    }
-}
-
-/// The possible special cases to return as input
-pub enum InputReturn {
-    Shutdown,
-    Menu,
-    Input(InputSet),
+pub trait EventHandler {
+    fn resized(&self, x: u32, y: u32);
+    fn shutdown(&self, );
+    fn mouse_moved(x: f64, y: f64);
+    fn mouse_pressed(button: MouseButton, state: ElementState);
+    fn key_pressed(&self, key: KeyboardInput);
 }

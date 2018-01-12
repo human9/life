@@ -36,9 +36,12 @@ pub fn gl_clear(frame: &mut glium::Frame) {
     frame.clear_color(1.0, 0.0, 0.0, 1.0);
 }
 
+// todo: dynamic screen size tracking
 pub struct TextDrawer {
     system: TextSystem,
     font: FontTexture,
+    line: i32,
+    fontsize: u32,
 }
 
 impl TextDrawer {
@@ -49,10 +52,12 @@ impl TextDrawer {
 
 }
 
-pub fn init_text(display: glium::Display) -> Result<TextDrawer, ()> {
+pub fn init_text(display: glium::Display, fontsize: u32) -> Result<TextDrawer, ()> {
     Ok( TextDrawer {
         system: TextSystem::new(&display),
-        font: FontTexture::new(&display, File::open(&Path::new("res/font/Anonymous Pro.ttf")).unwrap(), 24, FontTexture::ascii_character_list()).unwrap(),
+        font: FontTexture::new(&display, File::open(&Path::new("res/font/Anonymous Pro.ttf")).unwrap(), fontsize, FontTexture::ascii_character_list()).unwrap(),
+        fontsize: fontsize,
+        line: 0,
     } )
 }
 

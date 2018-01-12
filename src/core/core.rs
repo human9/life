@@ -11,7 +11,7 @@ use gl::cgtraits::AsUniform;
 use std::thread;
 use std::time::Duration;
 use core::window::Window;
-use core::window::InputReturn;
+use core::window::EventHandler;
 use core::stats::Stats;
 use core::input::KeyBinder;
 use core::input::DefaultBindings::*;
@@ -61,7 +61,7 @@ impl Core {
 
         let debug_program = self.window.with_display(gl::base::compile_debug_program).expect("Could not compile debug program!");
         let vertices = self.window.with_display(gl::base::make_triangle).expect("Failed making a triangle!");
-        let text_drawer = self.window.with_display(gl::base::init_text).expect("Failed to initialize text rendering!");
+        let text_drawer = gl::base::init_text(self.window.clone_display(), 24).expect("Failed to initialize text rendering!");
         let indices = glium::index::NoIndices(glium::index::PrimitiveType::TrianglesList);
         let projection: Matrix4<f32> = Matrix4::from(cgmath::Ortho {
             left: 0.0,
@@ -86,18 +86,7 @@ impl Core {
             }
             let delta = current_time - last_time;
 
-            match self.window.get_input(&events_loop, &mut binder) {
-                InputReturn::Shutdown => {
-                    println!("-> Shutdown");
-                    return;
-                },
-                InputReturn::Menu => {
-                    println!("-> Menu");
-                },
-                InputReturn::Input(input_set) => {
-                    //println!("{:?}", input_set.direction);
-                },
-            }
+            //self.window.get_input(&events_loop, &handler);
 
             last_time = current_time;
 
