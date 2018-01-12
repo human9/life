@@ -106,37 +106,42 @@ impl Window {
 }
 
 pub trait EventHandler {
-    fn resized(&self, x: u32, y: u32);
+    fn resized(&mut self, x: u32, y: u32);
     fn shutdown(&mut self);
-    fn mouse_moved(&self, x: f64, y: f64);
-    fn mouse_pressed(&self, button: MouseButton, state: ElementState);
-    fn key_pressed(&self, key: KeyboardInput);
+    fn mouse_moved(&mut self, x: f64, y: f64);
+    fn mouse_pressed(&mut self, button: MouseButton, state: ElementState);
+    fn key_pressed(&mut self, key: KeyboardInput);
 }
 
-pub struct DebugHandler {
+pub struct DebugHandler<'a> {
     pub shutdown: bool,
+    pub resolution: (u32, u32),
+    pub funky: &'a(FnMut()),
 }
 
-impl DebugHandler {
+impl<'a> DebugHandler<'a> {
     pub fn new() -> Self {
         DebugHandler {
             shutdown: false,
+            resolution: (800, 600),
+            funky: &|| {},
         }
     }
 }
 
-impl EventHandler for DebugHandler {
-    fn resized(&self, x: u32, y: u32) {
+impl<'a> EventHandler for DebugHandler<'a> {
+    fn resized(&mut self, x: u32, y: u32) {
+        self.resolution = (x, y);
     }
     fn shutdown(&mut self){ 
         self.shutdown = true;
     }
-    fn mouse_moved(&self, x: f64, y: f64) {
+    fn mouse_moved(&mut self, x: f64, y: f64) {
 
     }
-    fn mouse_pressed(&self, button: MouseButton, state: ElementState) {
+    fn mouse_pressed(&mut self, button: MouseButton, state: ElementState) {
 
     }
-    fn key_pressed(&self, key: KeyboardInput) {
+    fn key_pressed(&mut self, key: KeyboardInput) {
     }
 }

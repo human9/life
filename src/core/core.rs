@@ -61,7 +61,7 @@ impl Core {
         let vertices = self.window.with_display(gl::base::make_triangle).expect("Failed making a triangle!");
         let text_drawer = gl::base::init_text(self.window.clone_display(), 24).expect("Failed to initialize text rendering!");
         let indices = glium::index::NoIndices(glium::index::PrimitiveType::TrianglesList);
-        let projection: Matrix4<f32> = Matrix4::from(cgmath::Ortho {
+        let mut projection: Matrix4<f32> = Matrix4::from(cgmath::Ortho {
             left: 0.0,
             right: 800.0,
             bottom: 0.0,
@@ -69,13 +69,29 @@ impl Core {
             near: -1.0,
             far: 1.0 });
         
-        let mut view: Matrix4<f32> = Matrix4::from_translation(vec3(4.0, 3.0, 0.0));
-        view = view * Matrix4::from_scale(24.0);
-        let mvp = projection * view;
+        //let mut view: Matrix4<f32> = Matrix4::from_translation(vec3(0.0, 0.0, 0.0));
+        let mut view = Matrix4::from_scale(24.0);
+        let mut mvp = projection * view;
         let uniforms = uniform! { mvp: mvp.as_uniform() };
 
-        let mut handler = DebugHandler::new();
 
+        let scale: f32 = 24.0;
+
+        // blergh
+        let mut handler = DebugHandler {
+            resized: |(u32, u32)| {
+
+            },
+            ...
+        }
+        let funky = || {
+            println!("{}", scale);
+        };
+
+
+        let mut handler = DebugHandler::new();
+        handler.funky = &funky;
+        
         loop {
 
             let mut current_time = self.stats.millis_elapsed();
@@ -87,6 +103,16 @@ impl Core {
             let delta = current_time - last_time;
 
             self.window.get_input(&events_loop, &mut handler);
+            projection = Matrix4::from(cgmath::Ortho {
+                left: 0.0,
+                right: handler.resolution.0 as f32,
+                bottom: 0.0,
+                top: handler.resolution.1 as f32,
+                near: -1.0,
+                far: 1.0 });
+
+            view = Matrix4::from_scale(scale);
+            mvp = projection * view;
 
             last_time = current_time;
 
