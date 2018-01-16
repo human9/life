@@ -50,18 +50,8 @@ impl Window {
         self.display.clone()
     }
 
-    pub fn display(&mut self, f: &(Fn(&mut glium::Frame))) -> Result<(), Box<Error>> {
-
-        let mut frame = self.display.draw();
-        f(&mut frame);
-
-        frame.finish()?;
-
-        Ok( () )
-    }
-
     /// Query the window for input
-    pub fn get_input<E: EventHandler>(&mut self, events: &EventsLoop, handler: &mut E) {
+    pub fn get_input(&mut self, events: &EventsLoop, handler: &mut Handler) {
         
         self.events_loop.poll_events(|ev| {
 
@@ -81,6 +71,9 @@ impl Window {
                 },
 
                 Event::WindowEvent { event, .. } => match event {
+                    WindowEvent::ReceivedCharacter(c) => {
+                        handler.received_char(c);
+                    },
                     WindowEvent::Resized(x, y) => {
                         handler.resized(x, y);
                     },
@@ -105,43 +98,78 @@ impl Window {
     }
 }
 
-pub trait EventHandler {
-    fn resized(&mut self, x: u32, y: u32);
-    fn shutdown(&mut self);
-    fn mouse_moved(&mut self, x: f64, y: f64);
-    fn mouse_pressed(&mut self, button: MouseButton, state: ElementState);
-    fn key_pressed(&mut self, key: KeyboardInput);
+pub struct Handler<'a> {
+    keypress_cb: Box<'a + FnMut(KeyboardInput)>,
+    received_char_cb: Box<'a + FnMut(char)>,
+    mousemove_cb: Box<'a + FnMut(f64, f64)>,
+    mouseclick_cb: Box<'a + FnMut(MouseButton, ElementState)>,
+    resize_cb: Box<'a + FnMut(u32, u32)>,
+    shutdown_cb: Box<'a + FnMut()>,
 }
 
-pub struct DebugHandler<'a> {
-    pub shutdown: bool,
-    pub resolution: (u32, u32),
-    pub funky: &'a(FnMut()),
-}
+impl<'a> Handler<'a> {
 
-impl<'a> DebugHandler<'a> {
     pub fn new() -> Self {
-        DebugHandler {
-            shutdown: false,
-            resolution: (800, 600),
-            funky: &|| {},
+        Handler {
+            keypress_cb: Box::new(|key|{}),
+            received_char_cb: Box::new(|c|{}),
+            mousemove_cb: Box::new(|x, y|{}),
+            mouseclick_cb: Box::new(|button, state|{}),
+            resize_cb: Box::new(|x, y|{}),
+            shutdown_cb: Box::new(||{})
         }
     }
-}
 
-impl<'a> EventHandler for DebugHandler<'a> {
+    pub fn set_keypress_cb<CB: 'a + FnMut(KeyboardInput)>(&mut self, c: CB) {
+        self.keypress_cb = Box::new(c);
+    }
+    
+    pub fn set_mousemove_cb<CB: 'a + FnMut(f64, f64)>(&mut self, c: CB) {
+        self.mousemove_cb = Box::new(c);
+    }
+    
+    pub fn set_mouseclick_cb<CB: 'a + FnMut(MouseButton, ElementState)>(&mut self, c: CB) {
+        self.mouseclick_cb = Box::new(c);
+    }
+
+    pub fn set_shutdown_cb<CB: 'a + FnMut()>(&mut self, c: CB) {
+        self.shutdown_cb = Box::new(c);
+    }
+    
+    pub fn set_resize_cb<CB: 'a + FnMut(u32, u32)>(&mut self, c: CB) {
+        self.resize_cb = Box::new(c);
+    }
+    
+    pub fn set_received_char_cb<CB: 'a + FnMut(char)>(&mut self, c: CB) {
+        self.received_char_cb = Box::new(c);
+    }
+
     fn resized(&mut self, x: u32, y: u32) {
-        self.resolution = (x, y);
+        (self.resize_cb)(x, y);
     }
-    fn shutdown(&mut self){ 
-        self.shutdown = true;
+
+    fn shutdown(&mut self) {
+        (self.shutdown_cb)();
     }
+
     fn mouse_moved(&mut self, x: f64, y: f64) {
-
+        (self.mousemove_cb)(x, y);
     }
+
     fn mouse_pressed(&mut self, button: MouseButton, state: ElementState) {
-
+        (self.mouseclick_cb)(button, state);
     }
+
     fn key_pressed(&mut self, key: KeyboardInput) {
+        (self.keypress_cb)(key);
+    }
+
+    fn received_char(&mut self, c: char) {
+        (self.received_char_cb)(c);
     }
 }
+
+fn simple_callback() {
+    println!("hello");
+}
+

@@ -11,8 +11,7 @@ use gl::cgtraits::AsUniform;
 use std::thread;
 use std::time::Duration;
 use core::window::Window;
-use core::window::EventHandler;
-use core::window::DebugHandler;
+use core::window::Handler;
 use core::stats::Stats;
 use core::input::KeyBinder;
 use core::input::DefaultBindings::*;
@@ -77,21 +76,8 @@ impl Core {
 
         let scale: f32 = 24.0;
 
-        // blergh
-        let mut handler = DebugHandler {
-            resized: |(u32, u32)| {
 
-            },
-            ...
-        }
-        let funky = || {
-            println!("{}", scale);
-        };
-
-
-        let mut handler = DebugHandler::new();
-        handler.funky = &funky;
-        
+        let mut line = String::new();
         loop {
 
             let mut current_time = self.stats.millis_elapsed();
@@ -102,32 +88,34 @@ impl Core {
             }
             let delta = current_time - last_time;
 
-            self.window.get_input(&events_loop, &mut handler);
-            projection = Matrix4::from(cgmath::Ortho {
-                left: 0.0,
-                right: handler.resolution.0 as f32,
-                bottom: 0.0,
-                top: handler.resolution.1 as f32,
-                near: -1.0,
-                far: 1.0 });
+            {
+                let mut handler = Handler::new();
+                handler.set_resize_cb(|x, y| {
 
-            view = Matrix4::from_scale(scale);
-            mvp = projection * view;
+                    projection = Matrix4::from(cgmath::Ortho {
+                        left: 0.0,
+                        right: x as f32,
+                        bottom: 0.0,
+                        top: y as f32,
+                        near: -1.0,
+                        far: 1.0 });
+                    view = Matrix4::from_scale(scale);
+                    mvp = projection * view;
+
+                });
+                handler.set_received_char_cb(|c| {
+                    line.push(c);
+                });
+                self.window.get_input(&events_loop, &mut handler);
+            }
 
             last_time = current_time;
 
-            //self.window.display(&gl::base::gl_clear);
-            // client could define a list of closure pointers like so which can be passed down
-            // but I will implement some debug things first
-            self.window.display(&| frame | {
-                frame.clear_color(1.0, 1.0, 1.0, 1.0);
-                frame.draw(&vertices, &indices, &debug_program, &uniforms, &Default::default()).unwrap();
-                text_drawer.println("hello world", frame, &mvp);
-            });
-
-            if handler.shutdown == true {
-                break;
-            }
+            let mut frame = self.window.clone_display().draw();
+            frame.clear_color(1.0, 1.0, 1.0, 1.0);
+            frame.draw(&vertices, &indices, &debug_program, &uniforms, &Default::default()).unwrap();
+            text_drawer.println(&line, &mut frame, &mvp);
+            frame.finish();
         }
     }
 }

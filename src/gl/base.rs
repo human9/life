@@ -44,8 +44,8 @@ pub struct TextDrawer {
     fontsize: u32,
 }
 
-impl TextDrawer {
-    pub fn println(&self, line: &'static str, frame: &mut glium::Frame, mvp: &Matrix4<f32>) {
+impl<'a> TextDrawer {
+    pub fn println(&self, line: &'a str, frame: &mut glium::Frame, mvp: &Matrix4<f32>) {
         let string = glium_text::TextDisplay::new(&self.system, &self.font, &format!("{}", line));
         glium_text::draw(&string, &self.system, frame, mvp.as_uniform(), (0.0, 0.0, 0.0, 1.0));
     }
