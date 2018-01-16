@@ -50,6 +50,13 @@ impl Window {
         self.display.clone()
     }
 
+    //pub fn set_keypress_cb<CB: 'a + FnMut(KeyboardInput)>(&mut self, c: CB) {
+    pub fn display<DF: FnMut(&mut glium::Frame)>(&mut self, mut f: DF) {
+        let mut frame = self.display.draw();
+        f(&mut frame);
+        frame.finish();
+    }
+
     /// Query the window for input
     pub fn get_input(&mut self, events: &EventsLoop, handler: &mut Handler) {
         

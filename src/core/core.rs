@@ -71,11 +71,13 @@ impl Core {
         
         //let mut view: Matrix4<f32> = Matrix4::from_translation(vec3(0.0, 0.0, 0.0));
         let mut view = Matrix4::from_scale(scale);
+        let mut lines: u32 = 0;
         let mut mvp = projection * view;
         let uniforms = uniform! { mvp: mvp.as_uniform() };
 
-
         let mut line = String::new();
+
+        let mut shutdown = false;
         loop {
 
             let mut current_time = self.stats.millis_elapsed();
@@ -97,29 +99,42 @@ impl Core {
                         top: y as f32,
                         near: -1.0,
                         far: 1.0 });
-                    view = Matrix4::from_scale(scale);
-                    mvp = projection * view;
 
                 });
                 handler.set_received_char_cb(|c| {
                     //println!("{}", c.escape_unicode());
                     match c {
-                        '\r' => line.clear(),
+                        '\r' => {
+                            lines += 1;
+                        },
                         '\u{7f}' => { 
                             line.pop(); },
                         _ => line.push(c),
                     }
                 });
+                handler.set_keypress_cb(|key| {
+
+                });
+                handler.set_shutdown_cb(|| {
+                    shutdown = true;
+                });
                 self.window.get_input(&events_loop, &mut handler);
             }
+            view = Matrix4::from_translation(vec3(0.0, (lines as f32) * scale, 0.0)) * Matrix4::from_scale(scale);
+            mvp = projection * view;
 
             last_time = current_time;
 
-            let mut frame = self.window.clone_display().draw();
-            frame.clear_color(0.0, 0.0, 0.0, 1.0);
-            frame.draw(&vertices, &indices, &debug_program, &uniforms, &Default::default()).unwrap();
-            text_drawer.println(&line, &mut frame, &mvp);
-            frame.finish();
+            self.window.display(|mut frame| {
+                frame.clear_color(0.0, 0.0, 0.0, 1.0);
+                frame.draw(&vertices, &indices, &debug_program, &uniforms, &Default::default()).unwrap();
+                text_drawer.println(&line, &mut frame, &mvp);
+            });
+
+            if shutdown == true {
+                println!("See ya!");
+                break;
+            }
         }
     }
 }
