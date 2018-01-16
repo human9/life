@@ -56,9 +56,10 @@ impl Core {
             }
         };
 
+        let scale: f32 = 30.0;
         let debug_program = self.window.with_display(gl::base::compile_debug_program).expect("Could not compile debug program!");
         let vertices = self.window.with_display(gl::base::make_triangle).expect("Failed making a triangle!");
-        let text_drawer = gl::base::init_text(self.window.clone_display(), 24).expect("Failed to initialize text rendering!");
+        let text_drawer = gl::base::init_text(self.window.clone_display(), scale as u32).expect("Failed to initialize text rendering!");
         let indices = glium::index::NoIndices(glium::index::PrimitiveType::TrianglesList);
         let mut projection: Matrix4<f32> = Matrix4::from(cgmath::Ortho {
             left: 0.0,
@@ -69,12 +70,9 @@ impl Core {
             far: 1.0 });
         
         //let mut view: Matrix4<f32> = Matrix4::from_translation(vec3(0.0, 0.0, 0.0));
-        let mut view = Matrix4::from_scale(24.0);
+        let mut view = Matrix4::from_scale(scale);
         let mut mvp = projection * view;
         let uniforms = uniform! { mvp: mvp.as_uniform() };
-
-
-        let scale: f32 = 24.0;
 
 
         let mut line = String::new();
@@ -104,7 +102,13 @@ impl Core {
 
                 });
                 handler.set_received_char_cb(|c| {
-                    line.push(c);
+                    //println!("{}", c.escape_unicode());
+                    match c {
+                        '\r' => line.clear(),
+                        '\u{7f}' => { 
+                            line.pop(); },
+                        _ => line.push(c),
+                    }
                 });
                 self.window.get_input(&events_loop, &mut handler);
             }
@@ -112,7 +116,7 @@ impl Core {
             last_time = current_time;
 
             let mut frame = self.window.clone_display().draw();
-            frame.clear_color(1.0, 1.0, 1.0, 1.0);
+            frame.clear_color(0.0, 0.0, 0.0, 1.0);
             frame.draw(&vertices, &indices, &debug_program, &uniforms, &Default::default()).unwrap();
             text_drawer.println(&line, &mut frame, &mvp);
             frame.finish();
