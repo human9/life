@@ -102,14 +102,22 @@ impl Core {
 
                 });
                 handler.set_received_char_cb(|c| {
-                    //println!("{}", c.escape_unicode());
+                    println!("{}", c.escape_unicode());
                     match c {
                         '\r' => {
                             lines.push(line.clone());
                             line.clear();
                         },
                         '\u{7f}' => { 
-                            line.pop(); },
+                            if cfg!(target_os = "macos") {
+                                line.pop();
+                            }
+                        },
+                        '\u{8}' => { 
+                            if cfg!(target_os = "linux") {
+                                line.pop();
+                            }
+                        },
                         _ => line.push(c),
                     }
                 });
