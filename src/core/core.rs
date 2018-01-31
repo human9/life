@@ -32,7 +32,7 @@ impl Core {
         }
     }
 
-    pub fn mainloop(&mut self) {
+    pub fn mainloop(&mut self, mut extern_handler: &mut Handler) {
 
         let mut last_time = self.stats.millis_elapsed();
 
@@ -119,7 +119,7 @@ impl Core {
                 handler.set_shutdown_cb(|| {
                     shutdown = true;
                 });
-                self.window.get_input(&events_loop, &mut handler);
+                self.window.get_input(&events_loop, (&mut handler, &mut extern_handler));
             }
             view = Matrix4::from_scale(scale);
             mvp = projection * view;
