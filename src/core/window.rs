@@ -51,7 +51,7 @@ impl Window {
     }
 
     //pub fn set_keypress_cb<CB: 'a + FnMut(KeyboardInput)>(&mut self, c: CB) {
-    pub fn display<DF: FnMut(&mut glium::Frame)>(&mut self, mut f: DF) {
+    pub fn display<DF: FnMut(&mut glium::Frame)>(&mut self, f: &mut DF) {
         let mut frame = self.display.draw();
         f(&mut frame);
         frame.finish();

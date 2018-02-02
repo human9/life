@@ -18,8 +18,13 @@ use core::input::DefaultBindings::*;
 use gl;
 
 pub struct Core {
-    window: Window,
+    pub window: Window,
     stats: Stats,
+}
+
+pub enum Status {
+    Complete,
+    Closed,
 }
 
 impl Core {
@@ -32,7 +37,7 @@ impl Core {
         }
     }
 
-    pub fn mainloop(&mut self, mut extern_handler: &mut Handler) {
+    pub fn mainloop<DF: FnMut(&mut glium::Frame)>(&mut self, mut extern_handler: &mut Handler, mut f: DF) -> Result<Status, ()> {
 
         let mut last_time = self.stats.millis_elapsed();
 
@@ -134,6 +139,8 @@ impl Core {
 
             last_time = current_time;
 
+            self.window.display(&mut f);
+            /*
             self.window.display(|mut frame| {
                 frame.clear_color(0.0, 0.0, 0.0, 1.0);
                 frame.draw(&vertices, &indices, &debug_program, &uniforms, &Default::default()).unwrap();
@@ -142,12 +149,13 @@ impl Core {
                     let v = Matrix4::from_translation(vec3(0.0, (lines.len() as f32 - i as f32) * scale, 0.0)) * Matrix4::from_scale(scale);
                     text_drawer.println(&l, &mut frame, &(projection * v));
                 });
-            });
+            });*/
 
             if shutdown == true {
                 println!("See ya!");
-                break;
+                return Ok(Status::Closed)
             }
         }
+    Ok(Status::Complete)
     }
 }

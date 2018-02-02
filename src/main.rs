@@ -28,6 +28,12 @@ fn main() {
             }
         }
     });
-    core.mainloop(&mut handler);
+    let vertices = core.window.with_display(gl::base::make_triangle).expect("Failed making a triangle!");
+    let indices = glium::index::NoIndices(glium::index::PrimitiveType::TrianglesList);
+    // mainloops should have an exit condition... that way we can do more mainloops afterwards...
+    // keeping the core intact... MUAHAHAHAH
+    core.mainloop(&mut handler, |mut frame| {
+     
+    });
 
 }
