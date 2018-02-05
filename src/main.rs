@@ -3,6 +3,7 @@ extern crate glium;
 use life::*;
 
 use glium::glutin::{ElementState, MouseButton};
+use glium::Surface;
 use life::core::Core;
 use life::core::window::Handler;
 
@@ -32,8 +33,9 @@ fn main() {
     let indices = glium::index::NoIndices(glium::index::PrimitiveType::TrianglesList);
     // mainloops should have an exit condition... that way we can do more mainloops afterwards...
     // keeping the core intact... MUAHAHAHAH
-    core.mainloop(&mut handler, |mut frame| {
-     
+    core.mainloop(&mut handler, |frame| {
+
+        frame.clear_color(1.0, 0.0, 0.0, 0.0);
     });
 
 }

@@ -41,7 +41,6 @@ impl Core {
 
         let mut last_time = self.stats.millis_elapsed();
 
-        let closure = |e: glium::glutin::KeyboardInput| { println!("{:?}", e.scancode); };
         let events_loop = glium::glutin::EventsLoop::new();
         let mut binder = KeyBinder::new();
         if cfg!(target_os = "linux") {
@@ -140,8 +139,8 @@ impl Core {
             last_time = current_time;
 
             self.window.display(&mut f);
-            /*
-            self.window.display(|mut frame| {
+
+            self.window.display(&mut |mut frame: &mut glium::Frame| {
                 frame.clear_color(0.0, 0.0, 0.0, 1.0);
                 frame.draw(&vertices, &indices, &debug_program, &uniforms, &Default::default()).unwrap();
                 text_drawer.println(&line, &mut frame, &mvp);
@@ -149,7 +148,7 @@ impl Core {
                     let v = Matrix4::from_translation(vec3(0.0, (lines.len() as f32 - i as f32) * scale, 0.0)) * Matrix4::from_scale(scale);
                     text_drawer.println(&l, &mut frame, &(projection * v));
                 });
-            });*/
+            });
 
             if shutdown == true {
                 println!("See ya!");
