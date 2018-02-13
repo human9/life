@@ -3,13 +3,17 @@ name = "life"
 version = "0.1.0"
 authors = ["John <salamonj9@gmail.com>"]
 
+[features]
+default = ["gpu_cache"]
+gpu_cache = ["rusttype/gpu_cache"]
+
 [dependencies]
-gl = "*"
-glium = "*"
-glium_text_rusttype = { git = "https://github.com/human9/gtr-fork" }
+gl = "0.10.0"
+glium = "0.20.0"
+conrod = "0.57.0"
+rusttype = "0.3.1"
+glium_text_rusttype = "*"
 cgmath = "*"
 serde = "1.0"
 serde_derive = "1.0"
 serde_json = "1.0"
-conrod = "*"
-
