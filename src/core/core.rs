@@ -1,12 +1,14 @@
 extern crate glium;
 use glium::Surface;
 extern crate cgmath;
+extern crate image;
 use cgmath::One;
 use cgmath::Matrix4;
 use cgmath::Point3;
 use cgmath::Vector3;
 use cgmath::vec3;
 use gl::cgtraits::AsUniform;
+use std::path::Path;
 
 use std::thread;
 use std::time::Duration;
@@ -16,6 +18,9 @@ use core::stats::Stats;
 use core::input::KeyBinder;
 use core::input::DefaultBindings::*;
 use gl;
+
+use conrod;
+use support;
 
 pub struct Core {
     pub window: Window,
@@ -59,6 +64,29 @@ impl Core {
                 _ => (),
             }
         };
+
+        let display = self.window.clone_display();
+
+        let mut ui = conrod::UiBuilder::new([800., 600.]).theme(support::theme()).build();
+        let ids = support::Ids::new(ui.widget_id_generator());
+        let font_path = Path::new("res/font/Anonymous Pro.ttf");
+        ui.fonts.insert_from_file(font_path).unwrap();
+
+        fn load_img(display: &glium::Display, path: &Path) -> glium::texture::Texture2d {
+            let rgba_image = image::open(&Path::new(path)).unwrap().to_rgba();
+            let image_dimensions = rgba_image.dimensions();
+            let raw_image = glium::texture::RawImage2d::from_raw_rgba_reversed(&rgba_image.into_raw(), image_dimensions);
+            let texture = glium::texture::Texture2d::new(display, raw_image).unwrap();
+            texture
+        }
+        let path = Path::new("res/img/turtle.png");
+
+        let mut image_map = conrod::image::Map::new();
+        let turtle = image_map.insert(load_img(&display, path));
+
+        let mut app = support::DemoApp::new(turtle);
+        let mut renderer = support::conrod_backend::Renderer::new(&display).unwrap();
+
 
         let scale: f32 = 30.0;
         let debug_program = self.window.with_display(gl::base::compile_debug_program).expect("Could not compile debug program!");
@@ -131,14 +159,20 @@ impl Core {
                 handler.set_shutdown_cb(|| {
                     shutdown = true;
                 });
-                self.window.get_input(&events_loop, (&mut handler, &mut extern_handler));
+                self.window.get_input(&events_loop, &ui, (&mut handler, &mut extern_handler));
             }
             view = Matrix4::from_scale(scale);
             mvp = projection * view;
 
             last_time = current_time;
 
+            support::gui(&mut ui.set_widgets(), &ids, &mut app);
+
+
             let mut frame = self.window.clone_display().draw();
+            if let Some(primitives) = ui.draw_if_changed() {
+                renderer.fill(&display, primites, &image_map);
+            }
                 
             frame.clear_color(0.0, 0.0, 0.0, 1.0);
             f(&mut frame);

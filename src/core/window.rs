@@ -1,4 +1,5 @@
 extern crate glium;
+extern crate conrod;
 extern crate cgmath;
 
 use std::error::Error;
@@ -58,9 +59,14 @@ impl Window {
     }
 
     /// Query the window for input
-    pub fn get_input(&mut self, events: &EventsLoop, mut handlers: (&mut Handler, &mut Handler)) {
+    pub fn get_input(&mut self, events: &EventsLoop, ui: &conrod::Ui, mut handlers: (&mut Handler, &mut Handler)) {
         
         self.events_loop.poll_events(|ev| {
+
+            if let Some(event) = conrod::backend::winit::convert_event(ev.clone(), &self.display) {
+                ui.handle_event(event);
+            }
+
 
             let ref mut handler = handlers.0;
             let ref mut ex_handler = handlers.1;

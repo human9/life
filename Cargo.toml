@@ -4,12 +4,17 @@ version = "0.1.0"
 authors = ["John <salamonj9@gmail.com>"]
 
 [features]
-default = ["gpu_cache"]
+default = ["gpu_cache", "conrod_glium", "winit", "glutin"]
 gpu_cache = ["rusttype/gpu_cache"]
+conrod_glium = ["conrod/glium"]
+winit = ["conrod/winit"]
+glutin = ["glium/glutin"]
 
 [dependencies]
 gl = "0.10.0"
-glium = "0.20.0"
+glium = "*"
+image = "*"
+rand = "*"
 conrod = "0.57.0"
 rusttype = "0.3.1"
 glium_text_rusttype = "*"

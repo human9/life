@@ -1,5 +1,5 @@
 Todo:
-- Create a gui debug interface using conrad
+- Create a gui debug interface using conrad - implement event layer manually
 - Save scene state to file using serde
 - Allow shader editing?
 - Scene editing interface
