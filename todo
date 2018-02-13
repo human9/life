@@ -1,0 +1,10 @@
+Todo:
+- Create a gui debug interface using conrad
+- Save scene state to file using serde
+- Allow shader editing?
+- Scene editing interface
+- Skeletal animation support
+
+Done:
+- Key binding interface
+- Separation of boilerplate to lib

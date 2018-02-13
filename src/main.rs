@@ -35,7 +35,7 @@ fn main() {
     // keeping the core intact... MUAHAHAHAH
     core.mainloop(&mut handler, |frame| {
 
-        frame.clear_color(1.0, 0.0, 0.0, 0.0);
+        //frame.clear_color(1.0, 0.0, 0.0, 0.0);
     });
 
 }

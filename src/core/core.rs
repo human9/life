@@ -106,7 +106,7 @@ impl Core {
 
                 });
                 handler.set_received_char_cb(|c| {
-                    println!("{}", c.escape_unicode());
+                    //println!("{}", c.escape_unicode());
                     match c {
                         '\r' => {
                             lines.push(line.clone());
@@ -138,17 +138,18 @@ impl Core {
 
             last_time = current_time;
 
-            self.window.display(&mut f);
+            let mut frame = self.window.clone_display().draw();
+                
+            frame.clear_color(0.0, 0.0, 0.0, 1.0);
+            f(&mut frame);
 
-            self.window.display(&mut |mut frame: &mut glium::Frame| {
-                frame.clear_color(0.0, 0.0, 0.0, 1.0);
-                frame.draw(&vertices, &indices, &debug_program, &uniforms, &Default::default()).unwrap();
-                text_drawer.println(&line, &mut frame, &mvp);
-                &lines.iter().enumerate().for_each(|(i, l)| {
-                    let v = Matrix4::from_translation(vec3(0.0, (lines.len() as f32 - i as f32) * scale, 0.0)) * Matrix4::from_scale(scale);
-                    text_drawer.println(&l, &mut frame, &(projection * v));
-                });
+            frame.draw(&vertices, &indices, &debug_program, &uniforms, &Default::default()).unwrap();
+            text_drawer.println(&line, &mut frame, &mvp);
+            &lines.iter().enumerate().for_each(|(i, l)| {
+                let v = Matrix4::from_translation(vec3(0.0, (lines.len() as f32 - i as f32) * scale, 0.0)) * Matrix4::from_scale(scale);
+                text_drawer.println(&l, &mut frame, &(projection * v));
             });
+            frame.finish();
 
             if shutdown == true {
                 println!("See ya!");
