@@ -12,6 +12,7 @@
 #![allow(dead_code)]
 
 pub mod conrod_backend;
+pub mod winit;
 
 extern crate rand;
 use conrod;

@@ -2,8 +2,12 @@ extern crate glium;
 extern crate conrod;
 extern crate cgmath;
 
+use glium::Surface;
+
 use std::error::Error;
 use cgmath::num_traits::clamp;
+
+use support;
 
 use glium::glutin::{DeviceEvent, WindowEvent, Event, ElementState, VirtualKeyCode, EventsLoop, KeyboardInput, MouseButton, MouseScrollDelta};
 use cgmath::Vector2;
@@ -59,11 +63,12 @@ impl Window {
     }
 
     /// Query the window for input
-    pub fn get_input(&mut self, events: &EventsLoop, ui: &conrod::Ui, mut handlers: (&mut Handler, &mut Handler)) {
+    pub fn get_input(&mut self, events: &EventsLoop, ui: &mut conrod::Ui, mut handlers: (&mut Handler, &mut Handler)) {
         
+        let d = self.display.clone();
         self.events_loop.poll_events(|ev| {
 
-            if let Some(event) = conrod::backend::winit::convert_event(ev.clone(), &self.display) {
+            if let Some(event) = support::winit::convert_event(ev.clone(), &d) {
                 ui.handle_event(event);
             }
 
