@@ -57,7 +57,7 @@ pub fn theme() -> conrod::Theme {
         padding: Padding::none(),
         x_position: Position::Relative(Relative::Align(Align::Start), None),
         y_position: Position::Relative(Relative::Direction(Direction::Backwards, 20.0), None),
-        background_color: conrod::color::DARK_CHARCOAL,
+        background_color: conrod::color::Color::Rgba(0.2,0.2,0.,0.5,),
         shape_color: conrod::color::LIGHT_CHARCOAL,
         border_color: conrod::color::BLACK,
         border_width: 0.0,

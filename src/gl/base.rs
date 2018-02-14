@@ -47,7 +47,7 @@ pub struct TextDrawer {
 impl<'a> TextDrawer {
     pub fn println(&self, line: &'a str, frame: &mut glium::Frame, mvp: &Matrix4<f32>) {
         let string = glium_text::TextDisplay::new(&self.system, &self.font, line);
-        glium_text::draw(&string, &self.system, frame, mvp.as_uniform(), (1.0, 1.0, 0.0, 1.0));
+        glium_text::draw(&string, &self.system, frame, mvp.as_uniform(), (1.0, 1.0, -1.0, 1.0));
     }
 
 }

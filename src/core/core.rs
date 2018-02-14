@@ -173,19 +173,17 @@ impl Core {
                 
             f(&mut frame);
 
-            /*
+            frame.clear_color(0.0, 0.0, 0.0, 1.0);
             frame.draw(&vertices, &indices, &debug_program, &uniforms, &Default::default()).unwrap();
             text_drawer.println(&line, &mut frame, &mvp);
             &lines.iter().enumerate().for_each(|(i, l)| {
                 let v = Matrix4::from_translation(vec3(0.0, (lines.len() as f32 - i as f32) * scale, 0.0)) * Matrix4::from_scale(scale);
                 text_drawer.println(&l, &mut frame, &(projection * v));
             });
-*/
-            if let Some(primitives) = ui.draw_if_changed() {
-                frame.clear_color(0.0, 0.0, 0.0, 1.0);
-                renderer.fill(&display, primitives, &image_map);
-                renderer.draw(&display, &mut frame, &image_map).unwrap();
-            }
+            
+            let primitives = ui.draw();
+            renderer.fill(&display, primitives, &image_map);
+            renderer.draw(&display, &mut frame, &image_map).unwrap();
 
             frame.finish();
 
