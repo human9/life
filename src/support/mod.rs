@@ -135,7 +135,7 @@ pub fn gui(ui: &mut conrod::UiCell, ids: &Ids, app: &mut DemoApp) {
     // `Canvas` is a widget that provides some basic functionality for laying out children widgets.
     // By default, its size is the size of the window. We'll use this as a background for the
     // following widgets, as well as a scrollable container for the children widgets.
-    const TITLE: &'static str = "All Widgets";
+    const TITLE: &'static str = "Engine Prototype";
     widget::Canvas::new().pad(MARGIN).scroll_kids_vertically().set(ids.canvas, ui);
 
 
@@ -149,7 +149,7 @@ pub fn gui(ui: &mut conrod::UiCell, ids: &Ids, app: &mut DemoApp) {
     widget::Text::new(TITLE).font_size(TITLE_SIZE).mid_top_of(ids.canvas).set(ids.title, ui);
 
     const INTRODUCTION: &'static str =
-        "This example aims to demonstrate all widgets that are provided by conrod.\
+        "This is a prototype of my new engine!\
         \n\nThe widget that you are currently looking at is the Text widget. The Text widget \
         is one of several special \"primitive\" widget types which are used to construct \
         all other widget types. These types are \"special\" in the sense that conrod knows \

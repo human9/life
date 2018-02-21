@@ -42,7 +42,7 @@ impl Core {
         }
     }
 
-    pub fn mainloop<DF: FnMut(&mut glium::Frame)>(&mut self, mut extern_handler: &mut Handler, mut f: DF) -> Result<Status, ()> {
+    pub fn mainloop<DF: FnMut(&mut glium::Frame, &f32, &Matrix4<f32>)>(&mut self, mut extern_handler: &mut Handler, mut f: DF) -> Result<Status, ()> {
 
         let mut last_time = self.stats.millis_elapsed();
 
@@ -101,7 +101,8 @@ impl Core {
             near: -1.0,
             far: 1.0 });
         
-        //let mut view: Matrix4<f32> = Matrix4::from_translation(vec3(0.0, 0.0, 0.0));
+        
+        let mut view: Matrix4<f32> = Matrix4::from_translation(vec3(0.0, 0.0, 0.0));
         let mut view = Matrix4::from_scale(scale);
         let mut lines = Vec::new();
         let mut mvp = projection * view;
@@ -161,29 +162,33 @@ impl Core {
                 });
                 self.window.get_input(&events_loop, &mut ui, (&mut handler, &mut extern_handler));
             }
+
+
             view = Matrix4::from_scale(scale);
             mvp = projection * view;
 
             last_time = current_time;
 
-            support::gui(&mut ui.set_widgets(), &ids, &mut app);
 
 
             let mut frame = self.window.clone_display().draw();
                 
-            f(&mut frame);
+            f(&mut frame, &delta, &mvp);
 
-            frame.clear_color(0.0, 0.0, 0.0, 1.0);
+            //frame.clear_color(0.0, 0.0, 0.0, 1.0);
             frame.draw(&vertices, &indices, &debug_program, &uniforms, &Default::default()).unwrap();
             text_drawer.println(&line, &mut frame, &mvp);
             &lines.iter().enumerate().for_each(|(i, l)| {
                 let v = Matrix4::from_translation(vec3(0.0, (lines.len() as f32 - i as f32) * scale, 0.0)) * Matrix4::from_scale(scale);
                 text_drawer.println(&l, &mut frame, &(projection * v));
             });
-            
+           
+            /*
+            support::gui(&mut ui.set_widgets(), &ids, &mut app);
             let primitives = ui.draw();
             renderer.fill(&display, primitives, &image_map);
             renderer.draw(&display, &mut frame, &image_map).unwrap();
+            */
 
             frame.finish();
 

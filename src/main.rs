@@ -1,5 +1,7 @@
 extern crate life;
 extern crate glium;
+extern crate cgmath;
+use cgmath::Matrix4;
 use life::*;
 
 use glium::glutin::{ElementState, MouseButton};
@@ -15,8 +17,17 @@ fn main() {
     let mut isdown = false;
     let (mut m_x ,mut m_y) = (0., 0.);
 
-    let mut handler = Handler::new();
 
+    let mut projection: Matrix4<f32> = Matrix4::from(cgmath::Ortho {
+        left: 0.0,
+        right: 800.0,
+        bottom: 0.0,
+        top: 600.0,
+        near: -1.0,
+        far: 1.0 });
+
+    let mut handler = Handler::new();
+    
     handler.set_window_mousemove_cb(|x, y| {
         m_x = x;
         m_y = y;
@@ -32,10 +43,12 @@ fn main() {
     let vertices = core.window.with_display(gl::base::make_triangle).expect("Failed making a triangle!");
     let indices = glium::index::NoIndices(glium::index::PrimitiveType::TrianglesList);
     // mainloops should have an exit condition... that way we can do more mainloops afterwards...
-    // keeping the core intact... MUAHAHAHAH
-    core.mainloop(&mut handler, |frame| {
+    // maybe
+    
+    core.mainloop(&mut handler, |frame, delta, matrix| {
 
-        //frame.clear_color(1.0, 0.0, 0.0, 0.0);
+        //
+        frame.clear_color(1.0, 0.0, 0.0, 0.0);
     });
 
 }
