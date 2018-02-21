@@ -1,9 +1,15 @@
 extern crate life;
+extern crate sifter;
+extern crate petgraph;
 extern crate glium;
 extern crate cgmath;
+use std::env;
 use cgmath::Matrix4;
 use life::*;
+use sifter::*;
 
+use petgraph::Graph;
+use petgraph::graph::NodeIndex;
 use glium::glutin::{ElementState, MouseButton};
 use glium::Surface;
 use life::core::Core;
@@ -14,6 +20,15 @@ fn main() {
 
     // let life core handle the mainloop
 
+    let mut args = env::args();
+    args.next(); // consume first useless arg
+    let filename = match args.next() {
+        Some(arg) => arg,
+        None => panic!("Fuck!"),
+    };
+
+    let graph = sif_to_petgraph(&read_file(&filename).unwrap());
+    
     let mut isdown = false;
     let (mut m_x ,mut m_y) = (0., 0.);
 
