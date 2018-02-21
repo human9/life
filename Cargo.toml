@@ -11,7 +11,7 @@ winit = ["conrod/winit"]
 glutin = ["glium/glutin"]
 
 [dependencies]
-sifter = { path = "../sif_parse" }
+sifter = { path = "../sifter" }
 gl = "0.10.0"
 glium = "*"
 image = "*"

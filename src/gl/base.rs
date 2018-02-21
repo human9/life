@@ -16,10 +16,29 @@ use std::fs::File;
 
 #[derive(Copy, Clone)]
 pub struct Vertex3D {
-    position: [f32; 3],
+    pub position: [f32; 3],
 }
-
 implement_vertex!(Vertex3D, position);
+
+#[derive(Copy, Clone)]
+pub struct Offset {
+    pub offset: [f32; 3],
+}
+implement_vertex!(Offset, offset);
+
+pub fn make_square(display: glium::Display) -> Result<glium::VertexBuffer<Vertex3D>, glium::vertex::BufferCreationError> {
+
+    let vertex1 = Vertex3D { position: [ -6.0,  -6.0, 0.0] };
+    let vertex2 = Vertex3D { position: [ -6.0,  6., 0.0] };
+    let vertex3 = Vertex3D { position: [ 6.,  6., 0.0] };
+
+    let vertex4 = Vertex3D { position: [ 6.,  6., 0.0] };
+    let vertex5 = Vertex3D { position: [ 6.,  -6.0, 0.0] };
+    let vertex6 = Vertex3D { position: [ -6.0,  -6.0, 0.0] };
+    let square = vec![vertex1, vertex2, vertex3, vertex4, vertex5, vertex6];
+
+    glium::VertexBuffer::new(&display, &square)
+}
 
 pub fn make_triangle(display: glium::Display) -> Result<glium::VertexBuffer<Vertex3D>, glium::vertex::BufferCreationError> {
 
@@ -68,10 +87,11 @@ pub fn compile_debug_program(display: glium::Display) -> Result<glium::Program, 
         #version 140
 
         in vec3 position;
+        in vec3 offset;
         uniform mat4 mvp;
 
         void main() {
-            gl_Position = mvp * vec4(position, 1.0);
+            gl_Position = mvp * vec4(position + offset, 1.0);
         }
     "#;
 
