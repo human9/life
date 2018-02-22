@@ -141,21 +141,21 @@ fn main() {
         if iteration < iterations {
             for v in graph.node_indices() {
                 graph[v].disp = Vector2::zero();
-                /*
                 for u in graph.node_indices() {
                     if u != v {
                         let diff = graph[v].pos - graph[u].pos;
                         let magnitude = f32::max(diff.magnitude(), epsilon);
                         graph[v].disp = graph[v].disp + (diff/magnitude) * f_r(magnitude);
                     }
-                }*/
-                graph[v].disp = graph.raw_nodes().into_par_iter()
+                }
+                // this didn't seem to be faster at all...
+                /*graph[v].disp = graph.raw_nodes().into_par_iter()
                     .fold(|| Vector2::zero(), |mut vector, u| {
                         let diff = graph[v].pos - u.weight.pos;
                         let magnitude = f32::max(diff.magnitude(), epsilon);
                         vector = vector + (diff/magnitude) * f_r(magnitude);
                         vector
-                    }).sum();
+                    }).sum();*/
             }
 
             for e in graph.edge_indices() {
