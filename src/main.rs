@@ -122,8 +122,10 @@ fn main() {
     let temp = 0.02 * area.sqrt();
 
     let mut iteration = 0;
-    let iterations = 20;
+    let iterations = 50;
     core.mainloop(&mut handler, |frame, delta, matrix| {
+        // core will hand you the frame, time delta, and a projection matrix
+        // you hand the core an input handler
 
         let uniforms = uniform! { mvp: (matrix * Matrix4::from_translation(Vector3::new(400., 300., 0.)) * Matrix4::from_scale(1.0) ).as_uniform() };
 
@@ -150,14 +152,17 @@ fn main() {
             for v in graph.node_indices() {
                 let magnitude = f32::max(graph[v].disp.magnitude(), epsilon);
                 graph[v].pos = graph[v].pos + (graph[v].disp / magnitude) * f32::min(magnitude, temp);
-                graph[v].pos.x = f32::min(W/2., f32::max(-W/2., graph[v].pos.x));
-                graph[v].pos.y = f32::min(H/2., f32::max(-H/2., graph[v].pos.y));
+                // uncomment the following to force nodes not to go beyond window space
+                //graph[v].pos.x = f32::min(W/2., f32::max(-W/2., graph[v].pos.x));
+                //graph[v].pos.y = f32::min(H/2., f32::max(-H/2., graph[v].pos.y));
             }
 
             let temp = (1.0 - (iteration as f32 / iterations as f32)) * 0.1 * area.sqrt();
-        }
-                               
 
+            if iteration == iterations - 1 {
+                println!("Layout complete!");
+            }
+        }
         
 
         {

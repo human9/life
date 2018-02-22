@@ -28,13 +28,13 @@ implement_vertex!(Offset, offset);
 
 pub fn make_square(display: glium::Display) -> Result<glium::VertexBuffer<Vertex3D>, glium::vertex::BufferCreationError> {
 
-    let vertex1 = Vertex3D { position: [ -6.0,  -6.0, 0.0] };
-    let vertex2 = Vertex3D { position: [ -6.0,  6., 0.0] };
-    let vertex3 = Vertex3D { position: [ 6.,  6., 0.0] };
+    let vertex1 = Vertex3D { position: [ -1.0,  -1.0, 0.0] };
+    let vertex2 = Vertex3D { position: [ -1.0,  1., 0.0] };
+    let vertex3 = Vertex3D { position: [ 1.,  1., 0.0] };
 
-    let vertex4 = Vertex3D { position: [ 6.,  6., 0.0] };
-    let vertex5 = Vertex3D { position: [ 6.,  -6.0, 0.0] };
-    let vertex6 = Vertex3D { position: [ -6.0,  -6.0, 0.0] };
+    let vertex4 = Vertex3D { position: [ 1.,  1., 0.0] };
+    let vertex5 = Vertex3D { position: [ 1.,  -1.0, 0.0] };
+    let vertex6 = Vertex3D { position: [ -1.0,  -1.0, 0.0] };
     let square = vec![vertex1, vertex2, vertex3, vertex4, vertex5, vertex6];
 
     glium::VertexBuffer::new(&display, &square)
@@ -91,7 +91,7 @@ pub fn compile_debug_program(display: glium::Display) -> Result<glium::Program, 
         uniform mat4 mvp;
 
         void main() {
-            gl_Position = mvp * vec4(position + offset, 1.0);
+            gl_Position = mvp * vec4(position * 2.0 + offset, 1.0);
         }
     "#;
 
@@ -100,8 +100,10 @@ pub fn compile_debug_program(display: glium::Display) -> Result<glium::Program, 
 
         out vec4 color;
 
+        uniform vec4 rgba;
+
         void main() {
-            color = vec4(0.0, 1.0, 1.0, 1.0);
+            color = rgba;
         }
     "#;
 
