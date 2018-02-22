@@ -7,6 +7,10 @@ extern crate cgmath;
 use std::env;
 use rand::distributions::{Range, Sample};
 use cgmath::Matrix4;
+use cgmath::Vector2;
+use cgmath::Vector3;
+use cgmath::Zero;
+use cgmath::InnerSpace;
 use life::*;
 use sifter::*;
 
@@ -34,10 +38,12 @@ fn main() {
     let mut mapped_graph = sif_to_petgraph(&siffile);
     let ref mut graph = mapped_graph.graph;
 
+    /*
     for index in graph.node_indices() {
         println!("{}", graph.node_weight(index).unwrap().0.to_string());
         //let mut neighbors: Vec<usize> = graph.neighbors(index).map(|n| { n.index() }).collect();
     }
+    */
     
     let mut isdown = false;
     let (mut m_x ,mut m_y) = (0., 0.);
@@ -63,16 +69,16 @@ fn main() {
     let indices = glium::index::NoIndices(glium::index::PrimitiveType::TrianglesList);
    
         
-    let mut between = Range::new(100., 600.);
+    let mut between_x = Range::new(-100., 100.);
+    let mut between_y = Range::new(-100., 100.);
     let mut rng = rand::thread_rng();
 
     let mut nodes = {
         let data = graph.node_indices().map(|index| {
 
-            let x = between.sample(&mut rng);
-            let y = between.sample(&mut rng);
-            graph[index].1 = x;
-            graph[index].2 = y;
+            let x = between_x.sample(&mut rng);
+            let y = between_y.sample(&mut rng);
+            graph[index].pos = Vector2::new(x, y);
 
             gl::base::Offset {
                 offset: [x, y, 0.0],
@@ -102,29 +108,74 @@ fn main() {
         .. Default::default()
     };
 
+    // force-directed algorithm
+    let (W, H) = (800., 600.);
+    let area = W * H;
+    // random positions to graph are assigned within area
+    let k = (area/graph.node_count() as f32).sqrt();
+    // in the paper f_a includes an x, I think it's supposed to be z
+    let f_a = |x: f32| { (x*x)/k };
+    let f_r = |x: f32| { (k*k)/x };
+
+    let epsilon: f32 = 0.01; // minimal distance
+
+    let temp = 0.02 * area.sqrt();
+
+    let mut iteration = 0;
+    let iterations = 20;
     core.mainloop(&mut handler, |frame, delta, matrix| {
 
-        let uniforms = uniform! { mvp: matrix.as_uniform() };
+        let uniforms = uniform! { mvp: (matrix * Matrix4::from_translation(Vector3::new(400., 300., 0.)) * Matrix4::from_scale(1.0) ).as_uniform() };
 
-        // todo - implement force directed algo
-        // make graph contain pos, disp, etc
-        for v in graph.node_indices() {
-            for u in graph.node_indices() {
-                
+        if iteration < iterations {
+            for v in graph.node_indices() {
+                graph[v].disp = Vector2::zero();
+                for u in graph.node_indices() {
+                    if u != v {
+                        let diff = graph[v].pos - graph[u].pos;
+                        let magnitude = f32::max(diff.magnitude(), epsilon);
+                        graph[v].disp = graph[v].disp + (diff/magnitude) * f_r(magnitude); 
+                    }
+                }
             }
+
+            for e in graph.edge_indices() {
+                let (v, u) = graph.edge_endpoints(e).unwrap();
+                let diff = graph[v].pos - graph[u].pos;
+                let magnitude = f32::max(diff.magnitude(), epsilon);
+                graph[v].disp = graph[v].disp - (diff/magnitude) * f_a(magnitude);
+                graph[u].disp = graph[u].disp + (diff/magnitude) * f_a(magnitude);
+            }
+
+            for v in graph.node_indices() {
+                let magnitude = f32::max(graph[v].disp.magnitude(), epsilon);
+                graph[v].pos = graph[v].pos + (graph[v].disp / magnitude) * f32::min(magnitude, temp);
+                graph[v].pos.x = f32::min(W/2., f32::max(-W/2., graph[v].pos.x));
+                graph[v].pos.y = f32::min(H/2., f32::max(-H/2., graph[v].pos.y));
+            }
+
+            let temp = (1.0 - (iteration as f32 / iterations as f32)) * 0.1 * area.sqrt();
         }
+                               
+
+        
 
         {
             let mut mapping = nodes.map();
             // zip with nodelist
-            for node in mapping.iter_mut() {
-                //node.offset[0] += 1.0;
+            for (node, v) in mapping.iter_mut().zip(graph.node_indices()) {
+                let pos = graph[v].pos;
+
+                node.offset[0] = pos.x;
+                node.offset[1] = pos.y;
             }
         }
 
         frame.clear_color(0.1, 0.1, 0.1, 0.0);
         frame.draw((&square, nodes.per_instance().unwrap()), &indices, &program, &uniforms, &Default::default()).unwrap();
         frame.draw((&nodes, &zero), &edges, &program, &uniforms, &lineparams).unwrap();
+
+        iteration += 1;
     });
 
 }
