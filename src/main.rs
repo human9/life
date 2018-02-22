@@ -6,13 +6,10 @@ extern crate rand;
 extern crate cgmath;
 use std::env;
 use rand::distributions::{Range, Sample};
-use cgmath::Matrix4;
-use cgmath::Vector2;
-use cgmath::Vector3;
-use cgmath::Zero;
-use cgmath::InnerSpace;
+use cgmath::{Matrix4, Vector2, Vector3, Vector4, Zero, InnerSpace};
 use life::*;
 use sifter::*;
+use gl::cgtraits::*;
 
 use petgraph::Graph;
 use petgraph::graph::NodeIndex;
@@ -48,11 +45,15 @@ fn main() {
     let mut isdown = false;
     let (mut m_x ,mut m_y) = (0., 0.);
 
+    let mut scale: f32 = 1.0;
     let mut handler = Handler::new();
     
     handler.set_window_mousemove_cb(|x, y| {
         m_x = x;
         m_y = y;
+    });
+    handler.set_mousescroll_cb(|x, y| {
+        //scale += y;
     });
     handler.set_mouseclick_cb(|button, state| {
         if button == MouseButton::Left {
@@ -102,8 +103,9 @@ fn main() {
 
 
     let lineparams = glium::DrawParameters {
-        line_width: Some(1.),
-        //smooth: Some(glium::draw_parameters::Smooth::Nicest),
+        blend: glium::Blend::alpha_blending(),
+        line_width: Some(2.),
+        smooth: Some(glium::draw_parameters::Smooth::Nicest),
         polygon_mode: glium::draw_parameters::PolygonMode::Line,
         .. Default::default()
     };
@@ -124,10 +126,15 @@ fn main() {
     let mut iteration = 0;
     let iterations = 50;
     core.mainloop(&mut handler, |frame, delta, matrix| {
+        // TODO: Split off an input closure in the same style as this.
+        // Handlers must be generated on a per-loop basis, otherwise borrowing doesn't work
+
         // core will hand you the frame, time delta, and a projection matrix
         // you hand the core an input handler
 
-        let uniforms = uniform! { mvp: (matrix * Matrix4::from_translation(Vector3::new(400., 300., 0.)) * Matrix4::from_scale(1.0) ).as_uniform() };
+        let mvp = matrix * Matrix4::from_translation(Vector3::new(400., 300., 0.,)) * Matrix4::from_scale(scale);
+        let edge_uniforms = uniform! { mvp: mvp.as_uniform(), rgba: Vector4::<f32>::new(0.0 as f32, 0.0, 0.0, 0.7).as_uniform()};
+        let node_uniforms = uniform! { mvp: mvp.as_uniform(), rgba: Vector4::<f32>::new(0.0 as f32, 0.6, 0.0, 0.0).as_uniform()};
 
         if iteration < iterations {
             for v in graph.node_indices() {
@@ -177,8 +184,8 @@ fn main() {
         }
 
         frame.clear_color(0.1, 0.1, 0.1, 0.0);
-        frame.draw((&square, nodes.per_instance().unwrap()), &indices, &program, &uniforms, &Default::default()).unwrap();
-        frame.draw((&nodes, &zero), &edges, &program, &uniforms, &lineparams).unwrap();
+        frame.draw((&nodes, &zero), &edges, &program, &edge_uniforms, &lineparams).unwrap();
+        frame.draw((&square, nodes.per_instance().unwrap()), &indices, &program, &node_uniforms, &Default::default()).unwrap();
 
         iteration += 1;
     });

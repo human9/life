@@ -10,6 +10,7 @@ use cgmath::num_traits::clamp;
 use support;
 
 use glium::glutin::{DeviceEvent, WindowEvent, Event, ElementState, VirtualKeyCode, EventsLoop, KeyboardInput, MouseButton, MouseScrollDelta};
+use glium::glutin::MouseScrollDelta::*;
 use cgmath::Vector2;
 use core::input::{KeyBinder, DefaultBindings};
 
@@ -87,6 +88,16 @@ impl Window {
                             ex_handler.mouse_moved(delta.0, delta.1);
                             handler.mouse_moved(delta.0, delta.1);
                         },
+                        
+                        DeviceEvent::MouseWheel { delta } => {
+                            let (mut x, mut y);
+                            match delta {
+                                LineDelta(lx, ly) => {x = lx; y = ly},
+                                PixelDelta(lx, ly) => {x = lx; y = ly},
+                            }
+                            ex_handler.mouse_scrolled(x, y);
+                            handler.mouse_scrolled(x, y);
+                        },
 
                         _ => (),
                     }
@@ -133,6 +144,7 @@ pub struct Handler<'a> {
     keypress_cb: Box<'a + FnMut(KeyboardInput)>,
     received_char_cb: Box<'a + FnMut(char)>,
     mousemove_cb: Box<'a + FnMut(f64, f64)>,
+    mousescroll_cb: Box<'a + FnMut(f32, f32)>,
     window_mousemove_cb: Box<'a + FnMut(f64, f64)>,
     mouseclick_cb: Box<'a + FnMut(MouseButton, ElementState)>,
     resize_cb: Box<'a + FnMut(u32, u32)>,
@@ -146,6 +158,7 @@ impl<'a> Handler<'a> {
             keypress_cb: Box::new(|key|{}),
             received_char_cb: Box::new(|c|{}),
             mousemove_cb: Box::new(|x, y|{}),
+            mousescroll_cb: Box::new(|x, y|{}),
             window_mousemove_cb: Box::new(|x, y|{}),
             mouseclick_cb: Box::new(|button, state|{}),
             resize_cb: Box::new(|x, y|{}),
@@ -159,6 +172,10 @@ impl<'a> Handler<'a> {
     
     pub fn set_mousemove_cb<CB: 'a + FnMut(f64, f64)>(&mut self, c: CB) {
         self.mousemove_cb = Box::new(c);
+    }
+
+    pub fn set_mousescroll_cb<CB: 'a + FnMut(f32, f32)>(&mut self, c: CB) {
+        self.mousescroll_cb = Box::new(c);
     }
 
     pub fn set_window_mousemove_cb<CB: 'a + FnMut(f64, f64)>(&mut self, c: CB) {
@@ -191,6 +208,10 @@ impl<'a> Handler<'a> {
 
     fn mouse_moved(&mut self, x: f64, y: f64) {
         (self.mousemove_cb)(x, y);
+    }
+
+    fn mouse_scrolled(&mut self, x: f32, y: f32) {
+        (self.mousescroll_cb)(x, y);
     }
     
     fn window_mouse_moved(&mut self, x: f64, y: f64) {
