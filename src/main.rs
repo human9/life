@@ -94,13 +94,20 @@ fn main() {
 
     let edges = { 
         let mut edgeindices = Vec::new();
+        let mut colouredindices = Vec::new();
         graph.edge_indices().for_each(|index| {
             let ends = graph.edge_endpoints(index).unwrap();
-            edgeindices.push(ends.0.index() as u32);
-            edgeindices.push(ends.1.index() as u32);
+            if graph[index] == "OVERLAY" {
+                colouredindices.push(ends.0.index() as u32);
+                colouredindices.push(ends.1.index() as u32);
+            } else {
+                edgeindices.push(ends.0.index() as u32);
+                edgeindices.push(ends.1.index() as u32);
+            }
         });
 
-        glium::IndexBuffer::new(&core.window.clone_display(), glium::index::PrimitiveType::LinesList, &edgeindices).unwrap()
+        (glium::IndexBuffer::new(&core.window.clone_display(), glium::index::PrimitiveType::LinesList, &edgeindices).unwrap(),
+        glium::IndexBuffer::new(&core.window.clone_display(), glium::index::PrimitiveType::LinesList, &colouredindices).unwrap())
     };
 
 
@@ -111,6 +118,7 @@ fn main() {
         polygon_mode: glium::draw_parameters::PolygonMode::Line,
         .. Default::default()
     };
+
 
     // force-directed algorithm
     let (W, H) = (800., 600.);
@@ -136,6 +144,7 @@ fn main() {
 
         let mvp = matrix * Matrix4::from_translation(Vector3::new(400., 300., 0.,)) * Matrix4::from_scale(scale);
         let edge_uniforms = uniform! { mvp: mvp.as_uniform(), rgba: Vector4::<f32>::new(0.0 as f32, 0.0, 0.0, 0.7).as_uniform()};
+        let edge_uniforms2 = uniform! { mvp: mvp.as_uniform(), rgba: Vector4::<f32>::new(1.0 as f32, 0.0, 0.0, 0.7).as_uniform()};
         let node_uniforms = uniform! { mvp: mvp.as_uniform(), rgba: Vector4::<f32>::new(0.0 as f32, 0.6, 0.0, 0.0).as_uniform()};
 
         if iteration < iterations {
@@ -194,7 +203,8 @@ fn main() {
         }
 
         frame.clear_color(0.1, 0.1, 0.1, 0.0);
-        frame.draw((&nodes, &zero), &edges, &program, &edge_uniforms, &lineparams).unwrap();
+        frame.draw((&nodes, &zero), &edges.0, &program, &edge_uniforms, &lineparams).unwrap();
+        frame.draw((&nodes, &zero), &edges.1, &program, &edge_uniforms2, &lineparams).unwrap();
         frame.draw((&square, nodes.per_instance().unwrap()), &indices, &program, &node_uniforms, &Default::default()).unwrap();
 
         iteration += 1;
