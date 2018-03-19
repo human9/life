@@ -1,6 +1,5 @@
 extern crate life;
 extern crate rayon;
-use rayon::prelude::*;
 extern crate sifter;
 extern crate petgraph;
 extern crate rand;
@@ -11,11 +10,6 @@ use rand::distributions::{Range, Sample};
 use cgmath::{Matrix4, Vector2, Vector3, Vector4, Zero, InnerSpace};
 use life::*;
 use sifter::*;
-use gl::cgtraits::*;
-
-use petgraph::Graph;
-use petgraph::graph::NodeIndex;
-use glium::glutin::{ElementState, MouseButton};
 use glium::Surface;
 use life::core::Core;
 use life::gl::cgtraits::AsUniform;
@@ -37,20 +31,10 @@ fn main() {
     let mut mapped_graph = sif_to_petgraph(&siffile);
     let ref mut graph = mapped_graph.graph;
 
-    /*
-    for index in graph.node_indices() {
-        println!("{}", graph.node_weight(index).unwrap().0.to_string());
-        //let mut neighbors: Vec<usize> = graph.neighbors(index).map(|n| { n.index() }).collect();
-    }
-    */
-    
-    let mut isdown = false;
-    let (mut m_x ,mut m_y) = (0., 0.);
-
     let mut scale: f32 = 1.0;
-    let mut translation = Vector3::new(400., 300., 0.,);
+    let mut translation = Vector3::new(0., 0., 0.,);
+    let mut movement = Vector3::new(0., 0., 0.,);
 
-    let mut square = core.window.with_display(gl::base::make_square).expect("Failed making a triangle!");
     let zero = glium::VertexBuffer::new(&core.window.clone_display(), &vec![gl::base::Vertex3D{position:[0.,0.,0.,]}]).unwrap();
     let indices = glium::index::NoIndices(glium::index::PrimitiveType::TrianglesList);
    
@@ -58,7 +42,8 @@ fn main() {
     let mut between_x = Range::new(-100., 100.);
     let mut between_y = Range::new(-100., 100.);
     let mut rng = rand::thread_rng();
-
+    
+    let mut square;
     let mut nodes = {
         let data = graph.node_indices().map(|index| {
 
@@ -104,8 +89,8 @@ fn main() {
 
 
     // force-directed algorithm
-    let (W, H) = (800., 600.);
-    let area = W * H;
+    let (mut w, mut h) = (800., 600.);
+    let area = w * h;
     // random positions to graph are assigned within area
     let k = (area/graph.node_count() as f32).sqrt();
     // in the paper f_a includes an x, I think it's supposed to be z
@@ -123,54 +108,58 @@ fn main() {
     let display = core.window.clone_display();
 
     let mut projection: Matrix4<f32> = Matrix4::from(cgmath::Ortho {
-        left: 0.0,
-        right: 800.0,
-        bottom: 0.0,
-        top: 600.0,
+        left: -w/2.,
+        right: w/2.,
+        bottom: -h/2.,
+        top: h/2.,
         near: -1.0,
         far: 1.0 });
 
+    let mut mousedown = false;
+    let (mut m_x, mut m_y) = (0.0, 0.0);
     loop {
 
         {
             let mut handler = Handler::new();
             handler.set_resize_cb(|x, y| {
 
+                w = x as f32;
+                h = y as f32;
+
                 projection = Matrix4::from(cgmath::Ortho {
-                    left: 0.0,
-                    right: x as f32,
-                    bottom: 0.0,
-                    top: y as f32,
+                    left: -w/2.,
+                    right: w/2.,
+                    bottom: -h/2.,
+                    top: h/2.,
                     near: -1.0,
                     far: 1.0 });
 
             });
-            handler.set_keypress_cb(|input| {
-                
-                use glium::glutin::VirtualKeyCode;
-                let amount = 10.0;
-                match input.virtual_keycode.unwrap() {
-                    VirtualKeyCode::Up => {
-                        translation.y -= amount;
-                    },
-                    VirtualKeyCode::Down => {
-                        translation.y += amount;
-                    },
-                    VirtualKeyCode::Left => {
-                        translation.x += amount;
-                    },
-                    VirtualKeyCode::Right => {
-                        translation.x -= amount;
+            handler.set_mouseclick_cb(|button, state| {
+                use glium::glutin::{MouseButton, ElementState};
+                match button {
+                    MouseButton::Left => {
+                        match state {
+                            ElementState::Pressed => {
+                                mousedown = true;
+                            },
+                            ElementState::Released => {
+                                mousedown = false;
+                            },
+                        }
                     },
                     _ => {},
                 }
-
+            });
+            handler.set_mousemove_cb(|x, y| {
+                movement.x = x as f32;
+                movement.y = y as f32;
             });
             handler.set_shutdown_cb(|| {
                 shutdown = true;
             });
-            handler.set_mousescroll_cb(|x, y| {
-                scale += y / 300.;
+            handler.set_mousescroll_cb(|_, y| {
+                scale += y / 100.;
                 if scale < 1. {
                     scale = 1.;
                 }
@@ -178,7 +167,14 @@ fn main() {
             core.window.get_input(&mut handler);
         }
 
-        let mvp = projection * Matrix4::from_translation(translation) * Matrix4::from_scale(scale*scale);
+        if mousedown {
+            translation.x += movement.x;
+            translation.y -= movement.y;
+            movement.x = 0.;
+            movement.y = 0.;
+
+        }
+        let mvp = projection * Matrix4::from_translation(translation) * Matrix4::from_scale(scale.powf(scale));
         let edge_uniforms = uniform! { mvp: mvp.as_uniform(), rgba: Vector4::<f32>::new(0.0 as f32, 0.0, 0.0, 0.7).as_uniform()};
         let edge_uniforms2 = uniform! { mvp: mvp.as_uniform(), rgba: Vector4::<f32>::new(1.0 as f32, 0.0, 0.0, 0.7).as_uniform()};
         let node_uniforms = uniform! { mvp: mvp.as_uniform(), rgba: Vector4::<f32>::new(0.0 as f32, 0.6, 0.0, 0.0).as_uniform()};
@@ -219,8 +215,6 @@ fn main() {
                 //graph[v].pos.y = f32::min(H/2., f32::max(-H/2., graph[v].pos.y));
             }
 
-            let temp = (1.0 - (iteration as f32 / iterations as f32)) * 0.1 * area.sqrt();
-
             if iteration == iterations - 1 {
                 println!("Layout complete!");
             }
@@ -243,7 +237,7 @@ fn main() {
             let mut mapping = square.map();
             // zip with nodelist
             for vertex in mapping.iter_mut() {
-                let scalesq = scale*scale;
+                let scalesq = scale.powf(scale);
                 vertex.position[0] /= scalesq;
                 vertex.position[1] /= scalesq;
                 vertex.position[2] /= scalesq;
@@ -259,7 +253,7 @@ fn main() {
 
         iteration += 1;
 
-        frame.finish();
+        frame.finish().unwrap();
 
         if shutdown {
             break;
