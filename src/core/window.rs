@@ -64,28 +64,19 @@ impl Window {
     }
 
     /// Query the window for input
-    pub fn get_input(&mut self, events: &EventsLoop, ui: &mut conrod::Ui, mut handlers: (&mut Handler, &mut Handler)) {
+    pub fn get_input(&mut self, handler: &mut Handler) {
         
         let d = self.display.clone();
         self.events_loop.poll_events(|ev| {
 
-            if let Some(event) = support::winit::convert_event(ev.clone(), &d) {
-                ui.handle_event(event);
-            }
-
-
-            let ref mut handler = handlers.0;
-            let ref mut ex_handler = handlers.1;
             match ev {
                 Event::DeviceEvent { event, .. } => { 
                     match event {
                         DeviceEvent::Key(input) => {
-                            ex_handler.key_pressed(input);
                             handler.key_pressed(input);
                         },
 
                         DeviceEvent::MouseMotion { delta } => {
-                            ex_handler.mouse_moved(delta.0, delta.1);
                             handler.mouse_moved(delta.0, delta.1);
                         },
                         
@@ -95,7 +86,6 @@ impl Window {
                                 LineDelta(lx, ly) => {x = lx; y = ly},
                                 PixelDelta(lx, ly) => {x = lx; y = ly},
                             }
-                            ex_handler.mouse_scrolled(x, y);
                             handler.mouse_scrolled(x, y);
                         },
 
@@ -105,29 +95,23 @@ impl Window {
 
                 Event::WindowEvent { event, .. } => match event {
                     WindowEvent::ReceivedCharacter(c) => {
-                        ex_handler.received_char(c);
                         handler.received_char(c);
                     },
                     WindowEvent::CursorMoved { position, .. } => {
-                        ex_handler.window_mouse_moved(position.0, position.1);
                         handler.window_mouse_moved(position.0, position.1);
                     },
                     WindowEvent::Resized(x, y) => {
-                        ex_handler.resized(x, y);
                         handler.resized(x, y);
                     },
                     WindowEvent::KeyboardInput { input, .. } => {
                         if cfg!(target_os = "macos") {
-                            ex_handler.key_pressed(input);
                             handler.key_pressed(input);
                         }
                     }
                     WindowEvent::Closed => {
-                        ex_handler.shutdown(); 
                         handler.shutdown(); 
                     },
                     WindowEvent::MouseInput { button, state, .. } => {
-                        ex_handler.mouse_pressed(button, state); 
                         handler.mouse_pressed(button, state); 
                     },
                     _ => (),

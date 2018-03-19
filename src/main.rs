@@ -48,26 +48,9 @@ fn main() {
     let (mut m_x ,mut m_y) = (0., 0.);
 
     let mut scale: f32 = 1.0;
-    let mut handler = Handler::new();
-    
-    handler.set_window_mousemove_cb(|x, y| {
-        m_x = x;
-        m_y = y;
-    });
-    handler.set_mousescroll_cb(|x, y| {
-        //scale += y;
-    });
-    handler.set_mouseclick_cb(|button, state| {
-        if button == MouseButton::Left {
-            match state {
-                Pressed => isdown = true,
-                Released => isdown = false,
-            }
-        }
-    });
+    let mut translation = Vector3::new(400., 300., 0.,);
 
-
-    let square = core.window.with_display(gl::base::make_square).expect("Failed making a triangle!");
+    let mut square = core.window.with_display(gl::base::make_square).expect("Failed making a triangle!");
     let zero = glium::VertexBuffer::new(&core.window.clone_display(), &vec![gl::base::Vertex3D{position:[0.,0.,0.,]}]).unwrap();
     let indices = glium::index::NoIndices(glium::index::PrimitiveType::TrianglesList);
    
@@ -135,14 +118,67 @@ fn main() {
 
     let mut iteration = 0;
     let iterations = 50;
-    core.mainloop(&mut handler, |frame, delta, matrix| {
-        // TODO: Split off an input closure in the same style as this.
-        // Handlers must be generated on a per-loop basis, otherwise borrowing doesn't work
 
-        // core will hand you the frame, time delta, and a projection matrix
-        // you hand the core an input handler
+    let mut shutdown = false;
+    let display = core.window.clone_display();
 
-        let mvp = matrix * Matrix4::from_translation(Vector3::new(400., 300., 0.,)) * Matrix4::from_scale(scale);
+    let mut projection: Matrix4<f32> = Matrix4::from(cgmath::Ortho {
+        left: 0.0,
+        right: 800.0,
+        bottom: 0.0,
+        top: 600.0,
+        near: -1.0,
+        far: 1.0 });
+
+    loop {
+
+        {
+            let mut handler = Handler::new();
+            handler.set_resize_cb(|x, y| {
+
+                projection = Matrix4::from(cgmath::Ortho {
+                    left: 0.0,
+                    right: x as f32,
+                    bottom: 0.0,
+                    top: y as f32,
+                    near: -1.0,
+                    far: 1.0 });
+
+            });
+            handler.set_keypress_cb(|input| {
+                
+                use glium::glutin::VirtualKeyCode;
+                let amount = 10.0;
+                match input.virtual_keycode.unwrap() {
+                    VirtualKeyCode::Up => {
+                        translation.y -= amount;
+                    },
+                    VirtualKeyCode::Down => {
+                        translation.y += amount;
+                    },
+                    VirtualKeyCode::Left => {
+                        translation.x += amount;
+                    },
+                    VirtualKeyCode::Right => {
+                        translation.x -= amount;
+                    },
+                    _ => {},
+                }
+
+            });
+            handler.set_shutdown_cb(|| {
+                shutdown = true;
+            });
+            handler.set_mousescroll_cb(|x, y| {
+                scale += y / 300.;
+                if scale < 1. {
+                    scale = 1.;
+                }
+            });
+            core.window.get_input(&mut handler);
+        }
+
+        let mvp = projection * Matrix4::from_translation(translation) * Matrix4::from_scale(scale*scale);
         let edge_uniforms = uniform! { mvp: mvp.as_uniform(), rgba: Vector4::<f32>::new(0.0 as f32, 0.0, 0.0, 0.7).as_uniform()};
         let edge_uniforms2 = uniform! { mvp: mvp.as_uniform(), rgba: Vector4::<f32>::new(1.0 as f32, 0.0, 0.0, 0.7).as_uniform()};
         let node_uniforms = uniform! { mvp: mvp.as_uniform(), rgba: Vector4::<f32>::new(0.0 as f32, 0.6, 0.0, 0.0).as_uniform()};
@@ -202,12 +238,32 @@ fn main() {
             }
         }
 
+        square = core.window.with_display(gl::base::make_square).expect("Failed making a triangle!");
+        {
+            let mut mapping = square.map();
+            // zip with nodelist
+            for vertex in mapping.iter_mut() {
+                let scalesq = scale*scale;
+                vertex.position[0] /= scalesq;
+                vertex.position[1] /= scalesq;
+                vertex.position[2] /= scalesq;
+            }
+        }
+
+        let mut frame = display.draw();
+
         frame.clear_color(0.1, 0.1, 0.1, 0.0);
         frame.draw((&nodes, &zero), &edges.0, &program, &edge_uniforms, &lineparams).unwrap();
         frame.draw((&nodes, &zero), &edges.1, &program, &edge_uniforms2, &lineparams).unwrap();
         frame.draw((&square, nodes.per_instance().unwrap()), &indices, &program, &node_uniforms, &Default::default()).unwrap();
 
         iteration += 1;
-    });
+
+        frame.finish();
+
+        if shutdown {
+            break;
+        }
+    }
 
 }

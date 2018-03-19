@@ -42,6 +42,7 @@ impl Core {
         }
     }
 
+    /*
     pub fn mainloop<DF: FnMut(&mut glium::Frame, &f32, &Matrix4<f32>)>(&mut self, mut extern_handler: &mut Handler, mut f: DF) -> Result<Status, ()> {
 
         let mut last_time = self.stats.millis_elapsed();
@@ -199,4 +200,5 @@ impl Core {
         }
     Ok(Status::Complete)
     }
+    */
 }
