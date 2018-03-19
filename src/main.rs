@@ -151,9 +151,11 @@ fn main() {
                     _ => {},
                 }
             });
-            handler.set_mousemove_cb(|x, y| {
-                movement.x = x as f32;
-                movement.y = y as f32;
+            handler.set_window_mousemove_cb(|x, y| {
+                movement.x = (m_x - x) as f32;
+                movement.y = (m_y - y) as f32;
+                m_x = x;
+                m_y = y;
             });
             handler.set_shutdown_cb(|| {
                 shutdown = true;
@@ -168,8 +170,9 @@ fn main() {
         }
 
         if mousedown {
-            translation.x += movement.x;
-            translation.y -= movement.y;
+            println!("{:?}", movement);
+            translation.x -= movement.x;
+            translation.y += movement.y;
             movement.x = 0.;
             movement.y = 0.;
 

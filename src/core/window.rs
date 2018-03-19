@@ -98,7 +98,7 @@ impl Window {
                         handler.received_char(c);
                     },
                     WindowEvent::CursorMoved { position, .. } => {
-                        //handler.window_mouse_moved(position.0, position.1);
+                        handler.window_mouse_moved(position.0, position.1);
                     },
                     WindowEvent::Resized(x, y) => {
                         handler.resized(x, y);
