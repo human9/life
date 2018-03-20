@@ -1,5 +1,4 @@
 extern crate life;
-extern crate rayon;
 extern crate sifter;
 extern crate petgraph;
 extern crate rand;
@@ -13,7 +12,6 @@ use sifter::*;
 use glium::Surface;
 use life::core::Core;
 use life::gl::cgtraits::AsUniform;
-use life::core::window::Handler;
 
 fn main() {
     let mut core = Core::initialize();
@@ -120,63 +118,95 @@ fn main() {
     loop {
 
         {
-            let mut handler = Handler::new();
-            handler.set_resize_cb(|x, y| {
+            use glium::glutin::{DeviceEvent, WindowEvent, Event, ElementState, MouseButton, MouseScrollDelta};
 
-                w = x as f32;
-                h = y as f32;
+            core.window.events_loop.poll_events(|e| {
+                match e {
+                    Event::DeviceEvent { event, .. } => {
+                        match event {
 
-                projection = Matrix4::from(cgmath::Ortho {
-                    left: -w/2.,
-                    right: w/2.,
-                    bottom: -h/2.,
-                    top: h/2.,
-                    near: -1.0,
-                    far: 1.0 });
-
-            });
-            handler.set_mouseclick_cb(|button, state| {
-                use glium::glutin::{MouseButton, ElementState};
-                match button {
-                    MouseButton::Left => {
-                        match state {
-                            ElementState::Pressed => {
-                                mousedown = true;
+                            DeviceEvent::MouseWheel { delta } => {
+                                let (mut _x, mut y);
+                                match delta {
+                                    MouseScrollDelta::LineDelta(lx, ly) => {_x = lx; y = ly},
+                                    MouseScrollDelta::PixelDelta(lx, ly) => {_x = lx; y = ly},
+                                }
+                                scale += y / 100.;
+                                if scale < 1. {
+                                    scale = 1.;
+                                }
                             },
-                            ElementState::Released => {
-                                mousedown = false;
-                            },
+
+                            _ => (),
                         }
                     },
-                    _ => {},
+
+                    Event::WindowEvent { event, .. } => match event {
+
+                        WindowEvent::CursorMoved { position, .. } => {
+                            if mousedown {
+                                movement.x += m_x - position.0 as f32;
+                                movement.y += m_y - position.1 as f32;
+                            }
+                            // this will always be set, and up to date
+                            m_x = position.0 as f32;
+                            m_y = position.1 as f32;
+                        },
+
+                        WindowEvent::Resized(x, y) => {
+
+                            mousedown = false;
+
+                            w = x as f32;
+                            h = y as f32;
+
+                            projection = Matrix4::from(cgmath::Ortho {
+                                left: -w/2.,
+                                right: w/2.,
+                                bottom: -h/2.,
+                                top: h/2.,
+                                near: -1.0,
+                                far: 1.0 });
+                        },
+
+                        WindowEvent::Closed => {
+                            shutdown = true;
+                        },
+
+                        WindowEvent::MouseInput { button, state, .. } => {
+                            match button {
+                                MouseButton::Left => {
+                                    match state {
+                                        ElementState::Pressed => {
+                                            if m_x > 1.0 && m_y > 1.0 && m_x < w-1. && m_x < h-1. {
+                                                mousedown = true;
+                                            }
+                                        },
+                                        ElementState::Released => {
+                                            mousedown = false;
+                                        },
+                                    }
+                                },
+                                _ => {},
+                            }
+                        },
+
+                        _ => (),
+
+                    },
+
+                    _ => (),
+
                 }
             });
-            handler.set_window_mousemove_cb(|x, y| {
-                movement.x = (m_x - x) as f32;
-                movement.y = (m_y - y) as f32;
-                m_x = x;
-                m_y = y;
-            });
-            handler.set_shutdown_cb(|| {
-                shutdown = true;
-            });
-            handler.set_mousescroll_cb(|_, y| {
-                scale += y / 100.;
-                if scale < 1. {
-                    scale = 1.;
-                }
-            });
-            core.window.get_input(&mut handler);
-        }
-
-        if mousedown {
-            println!("{:?}", movement);
-            translation.x -= movement.x;
-            translation.y += movement.y;
-            movement.x = 0.;
-            movement.y = 0.;
 
         }
+
+        translation.x -= movement.x;
+        translation.y += movement.y;
+        movement.x = 0.;
+        movement.y = 0.;
+
         let mvp = projection * Matrix4::from_translation(translation) * Matrix4::from_scale(scale.powf(scale));
         let edge_uniforms = uniform! { mvp: mvp.as_uniform(), rgba: Vector4::<f32>::new(0.0 as f32, 0.0, 0.0, 0.7).as_uniform()};
         let edge_uniforms2 = uniform! { mvp: mvp.as_uniform(), rgba: Vector4::<f32>::new(1.0 as f32, 0.0, 0.0, 0.7).as_uniform()};

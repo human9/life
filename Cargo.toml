@@ -13,9 +13,7 @@ glutin = ["glium/glutin"]
 [dependencies]
 sifter = { path = "../sifter" }
 gl = "0.10.0"
-rayon = "1.0.0"
 glium = "*"
-image = "*"
 rand = "*"
 conrod = "0.57.0"
 rusttype = "*"
