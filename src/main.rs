@@ -79,8 +79,8 @@ fn main() {
 
     let lineparams = glium::DrawParameters {
         blend: glium::Blend::alpha_blending(),
-        line_width: Some(2.),
-        smooth: Some(glium::draw_parameters::Smooth::Nicest),
+        //line_width: Some(2.),
+        //smooth: Some(glium::draw_parameters::Smooth::Nicest),
         polygon_mode: glium::draw_parameters::PolygonMode::Line,
         .. Default::default()
     };
@@ -178,7 +178,7 @@ fn main() {
                                 MouseButton::Left => {
                                     match state {
                                         ElementState::Pressed => {
-                                            if m_x > 1.0 && m_y > 1.0 && m_x < w-1. && m_x < h-1. {
+                                            if m_x > 0.0 && m_y > 0.0 {
                                                 mousedown = true;
                                             }
                                         },
